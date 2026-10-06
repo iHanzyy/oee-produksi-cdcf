@@ -2,54 +2,75 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DowntimeLog;
-use App\Models\Area;
-use App\Models\Machine;
-use Illuminate\Http\Request;
 use App\Exports\DowntimeHistoryExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Requests\HistoryFilterRequest;
+use App\Models\Area;
+use App\Models\DowntimeLog;
+use App\Models\Machine;
+use App\Models\ProductionSession;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class HistoryController extends Controller
 {
-    public function index(Request $request)
+    public function index(HistoryFilterRequest $request)
     {
-        // Mulai query dasar dengan memanggil semua relasi tabel
-        $query = DowntimeLog::with(['productionSession.machine.area', 'downtimeCategory', 'personnel']);
+        $filters = $request->filters();
+        $logs = DowntimeLog::query()->forHistory($filters)->paginate(15)->withQueryString();
+        $areas = Area::query()->orderBy('area_name')->get();
+        $machines = Machine::query()
+            ->when(isset($filters['area_id']), fn ($query) => $query->where('area_id', $filters['area_id']))
+            ->orderBy('machine_name')
+            ->get();
 
-        // 1. Filter Rentang Tanggal (Bulan/Hari)
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $start = Carbon::parse($request->start_date)->startOfDay();
-            $end = Carbon::parse($request->end_date)->endOfDay();
-            $query->whereBetween('stop_time', [$start, $end]);
-        }
+        $activeSessions = ProductionSession::with(['machine.area', 'product', 'downtimeLogs'])
+            ->active()
+            ->oldest('start_time')
+            ->get()
+            ->map(fn (ProductionSession $session) => $this->sessionPayload($session))
+            ->values();
 
-        // 2. Filter Area
-        if ($request->filled('area_id')) {
-            $query->whereHas('productionSession.machine', function($q) use ($request) {
-                $q->where('area_id', $request->area_id);
-            });
-        }
-
-        // 3. Filter Nama Mesin
-        if ($request->filled('machine_id')) {
-            $query->whereHas('productionSession', function($q) use ($request) {
-                $q->where('machine_id', $request->machine_id);
-            });
-        }
-
-        // withQueryString() memastikan filter tidak hilang saat pindah halaman (pagination)
-        $logs = $query->latest()->paginate(15)->withQueryString(); 
-
-        $areas = Area::all();
-        $machines = Machine::all();
-
-        return view('history', compact('logs', 'areas', 'machines'));
+        return view('history', compact('logs', 'areas', 'machines', 'activeSessions'));
     }
 
-    public function exportExcel(Request $request)
+    public function activeSessions(): JsonResponse
     {
-        // Kirim data filter ke modul Export agar Excel yang diunduh sesuai dengan layar
-        return Excel::download(new DowntimeHistoryExport($request->all()), 'Laporan_Downtime_OEE.xlsx');
+        $activeSessions = ProductionSession::with(['machine.area', 'product', 'downtimeLogs'])
+            ->active()
+            ->oldest('start_time')
+            ->get()
+            ->map(fn (ProductionSession $session) => $this->sessionPayload($session))
+            ->values();
+
+        return response()->json([
+            'sessions' => $activeSessions,
+            'serverNow' => now('Asia/Jakarta')->toIso8601String(),
+        ]);
+    }
+
+    private function sessionPayload(ProductionSession $session): array
+    {
+        $activeDowntime = $session->downtimeLogs->firstWhere('go_time', null);
+
+        return [
+            'id' => $session->id,
+            'status' => $session->status,
+            'operatorName' => $session->operator_name,
+            'startTime' => $session->start_time?->copy()->timezone('Asia/Jakarta')->toIso8601String(),
+            'area' => $session->machine->area->area_name,
+            'product' => $session->product?->product_name ?? 'Produk',
+            'machine' => $session->machine->machine_name,
+            'downtime' => $activeDowntime ? [
+                'id' => $activeDowntime->id,
+                'stopTime' => Carbon::parse($activeDowntime->stop_time)->timezone('Asia/Jakarta')->toIso8601String(),
+            ] : null,
+        ];
+    }
+
+    public function exportExcel(HistoryFilterRequest $request): BinaryFileResponse
+    {
+        return Excel::download(new DowntimeHistoryExport($request->filters()), 'Laporan_Downtime_OEE.xlsx');
     }
 }

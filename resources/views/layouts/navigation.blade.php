@@ -1,40 +1,42 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 shadow-sm">
+<nav x-data="{ open: false }" class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
+        <div class="flex justify-between items-center h-16 sm:h-18">
+            <div class="flex items-center space-x-4 sm:space-x-8">
                 <!-- Logo Aplikasi Pabrik -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="font-bold text-xl text-indigo-600 tracking-wider">
-                        OEE & MTTR SYSTEM
+                    <a href="{{ auth()->user()->role === 'operator' ? route('dashboard') : route('history.index') }}" class="font-extrabold text-lg sm:text-xl text-indigo-700 tracking-wider flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-indigo-600"></span>
+                        KONTROL PRODUKSI
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        Dashboard OEE
-                    </x-nav-link>
-                    <x-nav-link :href="route('history.index')" :active="request()->routeIs('history.index')">
-                        Riwayat & Arsip
-                    </x-nav-link>
+                <div class="flex space-x-4 sm:space-x-6">
+                    @if (auth()->user()->role === 'operator')
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-sm sm:text-base font-semibold">
+                            Kontrol Sesi
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('history.index')" :active="request()->routeIs('history.index')" class="text-sm sm:text-base font-semibold">
+                            Riwayat & Arsip
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
-            <!-- Settings Dropdown / User Info -->
-            <div class="hidden sm:flex sm:items-center sm:ml-6">
-                <div class="ml-3 relative">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                        {{ ucfirst(auth()->user()->role ?? 'Operator') }} : {{ Auth::user()->name }}
-                    </span>
-                    
-                    <!-- Tombol Logout bawaan Breeze -->
-                    <form method="POST" action="{{ route('logout') }}" class="inline ml-3">
-                        @csrf
-                        <button type="submit" class="text-xs text-red-600 hover:text-red-900 font-bold uppercase">
-                            Keluar
-                        </button>
-                    </form>
-                </div>
+            <!-- User Info & Logout Button - Always visible & comfortable for tablet touch -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-800 border border-slate-200">
+                    <span class="font-bold text-indigo-700 mr-1.5 uppercase">{{ auth()->user()->role ?? 'Operator' }}</span>
+                    <span class="text-slate-600 hidden xs:inline">| {{ Auth::user()->name }}</span>
+                </span>
+                
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="min-h-[42px] px-3.5 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-xs uppercase tracking-wider transition-colors">
+                        Keluar
+                    </button>
+                </form>
             </div>
         </div>
     </div>

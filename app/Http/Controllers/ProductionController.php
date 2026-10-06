@@ -2,105 +2,374 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DowntimeLog;
-use App\Models\ProductionSession;
-use App\Models\DowntimeCategory;
-use App\Models\Personnel;
-use App\Models\Machine;
+use App\Http\Middleware\EnsureDeviceToken;
+use App\Http\Requests\ResumeProductionSessionRequest;
+use App\Http\Requests\StartProductionSessionRequest;
 use App\Models\Area;
-use Illuminate\Http\Request;
+use App\Models\DowntimeCategory;
+use App\Models\DowntimeLog;
+use App\Models\Machine;
+use App\Models\Personnel;
+use App\Models\ProductionSession;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $activeSession = ProductionSession::with('machine.area', 'operator')->whereIn('status', ['running', 'downtime'])->latest()->first();
-        
-        $logs = DowntimeLog::with(['productionSession.machine.area', 'downtimeCategory', 'personnel'])
+        $controlledSession = ProductionSession::with(['machine.area', 'product'])
+            ->where('controller_token_hash', $this->controllerHash($request))
             ->latest()
-            ->paginate(10);
-            
-        $lastLog = null;
-        if ($activeSession && $activeSession->status === 'downtime') {
-            $lastLog = DowntimeLog::where('production_session_id', $activeSession->id)
-                ->whereNull('go_time')->latest()->first();
-        }
-
+            ->first();
         $categories = DowntimeCategory::all();
         $personnels = Personnel::all();
-        $machines = Machine::all(); // Untuk opsi ketik
-        $areas = Area::all(); // Untuk opsi area
+        $areas = Area::with(['activeProducts', 'activeMachines'])->get();
+        $availableSessions = ProductionSession::with(['machine.area', 'product'])
+            ->active()
+            ->oldest('start_time')
+            ->get();
+        $dashboardState = [
+            'data' => $controlledSession ? $this->sessionPayload($controlledSession) : null,
+            'isController' => $controlledSession !== null,
+            'serverNow' => now('Asia/Jakarta')->toIso8601String(),
+            'availableSessions' => $availableSessions->map(
+                fn (ProductionSession $session) => $this->sessionPayload($session)
+            ),
+        ];
+        $areaOptions = $areas->map(fn (Area $area) => [
+            'id' => $area->id,
+            'name' => $area->area_name,
+            'products' => $area->activeProducts->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->product_name,
+            ])->values(),
+            'machines' => $area->activeMachines->map(fn ($machine) => [
+                'id' => $machine->id,
+                'name' => $machine->machine_name,
+            ])->values(),
+        ])->values();
 
-        return view('dashboard', compact('logs', 'categories', 'personnels', 'machines', 'areas', 'activeSession', 'lastLog'));
+        return view('dashboard', compact('dashboardState', 'areaOptions', 'categories', 'personnels', 'areas'));
     }
 
-    public function startSession(Request $request)
+    public function startSession(StartProductionSessionRequest $request): JsonResponse
     {
-        // Cari mesin berdasarkan nama yang diketik, jika tidak ada buat baru sesuai Area
-        $machine = Machine::firstOrCreate(
-            ['machine_name' => $request->machine_name],
-            ['area_id' => $request->area_id]
+        $validated = $request->validated();
+        $controllerHash = $this->controllerHash($request);
+
+        $session = DB::transaction(function () use ($validated, $controllerHash): ProductionSession {
+            abort_if(
+                ProductionSession::query()->where('controller_token_hash', $controllerHash)->exists(),
+                409,
+                'Browser ini masih mengontrol sesi lain.',
+            );
+
+            $machine = Machine::query()->lockForUpdate()->findOrFail($validated['machine_id']);
+
+            abort_if(
+                ProductionSession::active()->where('machine_id', $machine->id)->exists(),
+                409,
+                'Mesin sedang digunakan.',
+            );
+
+            return ProductionSession::create([
+                'machine_id' => $machine->id,
+                'product_id' => $validated['product_id'],
+                'operator_id' => null,
+                'operator_name' => $validated['operator_name'],
+                'controller_token_hash' => $controllerHash,
+                'start_time' => now(),
+                'status' => 'running',
+            ]);
+        });
+
+        return response()->json([
+            'data' => $this->sessionPayload($session),
+            'isController' => true,
+            'serverNow' => now('Asia/Jakarta')->toIso8601String(),
+        ], 201);
+    }
+
+    public function takeover(Request $request, ProductionSession $productionSession): JsonResponse
+    {
+        $controllerHash = $this->controllerHash($request);
+
+        $session = DB::transaction(function () use ($productionSession, $controllerHash): ProductionSession {
+            $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
+
+            abort_unless(in_array($lockedSession->status, ['running', 'downtime'], true), 409, 'Sesi sudah tidak aktif.');
+            abort_if(
+                ProductionSession::query()
+                    ->where('controller_token_hash', $controllerHash)
+                    ->whereKeyNot($lockedSession->id)
+                    ->exists(),
+                409,
+                'Browser ini masih mengontrol sesi lain.',
+            );
+
+            $lockedSession->update(['controller_token_hash' => $controllerHash]);
+
+            return $lockedSession;
+        });
+
+        return response()->json([
+            'data' => $this->sessionPayload($session),
+            'isController' => true,
+            'serverNow' => now('Asia/Jakarta')->toIso8601String(),
+        ]);
+    }
+
+    public function status(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'session_id' => ['nullable', 'integer', 'exists:production_sessions,id'],
+        ]);
+        $controllerHash = $this->controllerHash($request);
+
+        $session = isset($validated['session_id'])
+            ? ProductionSession::findOrFail($validated['session_id'])
+            : ProductionSession::where('controller_token_hash', $controllerHash)->latest()->first();
+
+        return response()->json([
+            'data' => $session ? $this->sessionPayload($session) : null,
+            'isController' => $session !== null
+                && $session->controller_token_hash !== null
+                && hash_equals($session->controller_token_hash, $controllerHash),
+            'serverNow' => now('Asia/Jakarta')->toIso8601String(),
+            'availableSessions' => ProductionSession::with(['machine.area', 'product'])
+                ->active()
+                ->oldest('start_time')
+                ->get()
+                ->map(fn (ProductionSession $activeSession) => $this->sessionPayload($activeSession)),
+        ]);
+    }
+
+    public function stopMachine(Request $request, ProductionSession $productionSession): JsonResponse
+    {
+        $session = DB::transaction(function () use ($request, $productionSession): ProductionSession {
+            $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
+            $this->assertController($lockedSession, $request);
+            abort_unless($lockedSession->status === 'running', 409, 'Mesin tidak dalam status berjalan.');
+
+            // Proteksi backend: cegah stop mesin dalam waktu 2 detik setelah resume untuk mencegah loop downtime
+            if (! app()->runningUnitTests()) {
+                $lastGoLog = DowntimeLog::query()
+                    ->where('production_session_id', $lockedSession->id)
+                    ->whereNotNull('go_time')
+                    ->latest('id')
+                    ->first();
+
+                if ($lastGoLog && $lastGoLog->go_time) {
+                    $secondsSinceResume = Carbon::parse($lastGoLog->go_time)->diffInSeconds(now());
+                    abort_if(
+                        $secondsSinceResume < 3,
+                        429,
+                        'Mesin baru saja dijalankan. Harap tunggu beberapa detik sebelum menghentikan mesin kembali.'
+                    );
+                }
+
+                if ($lockedSession->start_time) {
+                    $secondsSinceStart = Carbon::parse($lockedSession->start_time)->diffInSeconds(now());
+                    abort_if(
+                        $secondsSinceStart < 2,
+                        429,
+                        'Mesin baru saja dimulai. Harap tunggu beberapa detik sebelum menghentikan mesin.'
+                    );
+                }
+            }
+
+            DowntimeLog::create([
+                'production_session_id' => $lockedSession->id,
+                'stop_time' => now(),
+            ]);
+            $lockedSession->update(['status' => 'downtime']);
+
+            return $lockedSession;
+        });
+
+        return $this->sessionResponse($session);
+    }
+
+    public function resumeMachine(ResumeProductionSessionRequest $request, ProductionSession $productionSession): JsonResponse
+    {
+        $validated = $request->validated();
+        $session = DB::transaction(function () use ($request, $productionSession, $validated): ProductionSession {
+            $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
+            $this->assertController($lockedSession, $request);
+            abort_unless($lockedSession->status === 'downtime', 409, 'Mesin tidak dalam status downtime.');
+
+            $log = DowntimeLog::query()
+                ->where('production_session_id', $lockedSession->id)
+                ->whereNull('go_time')
+                ->lockForUpdate()
+                ->first();
+            abort_if($log === null, 409, 'Log downtime aktif tidak ditemukan.');
+
+            $goTime = now();
+            $log->update([
+                'go_time' => $goTime,
+                'duration_seconds' => (int) Carbon::parse($log->stop_time)->diffInSeconds($goTime),
+                'downtime_category_id' => $validated['category_id'],
+                'personnel_id' => $validated['personnel_id'],
+                'replaced_component' => $validated['replaced_component'],
+                'repair_action' => $validated['repair_action'],
+            ]);
+            $lockedSession->update(['status' => 'running']);
+
+            return $lockedSession;
+        });
+
+        return $this->sessionResponse($session);
+    }
+
+    public function rejectLegacyCompletion(): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Halaman tablet masih memakai versi lama. Muat ulang halaman sebelum melanjutkan.',
+        ], 409);
+    }
+
+    public function endSession(Request $request, ProductionSession $productionSession): JsonResponse
+    {
+        abort_unless(
+            $request->boolean('confirmed'),
+            422,
+            'Konfirmasi selesai produksi tidak diterima. Muat ulang halaman lalu coba lagi.'
         );
 
-        // Abaikan input operator dari form, otomatis tugaskan ke operator default (agar tidak error DB)
-        $defaultOperator = Personnel::where('role', 'Operator Produksi')->first();
+        $session = DB::transaction(function () use ($request, $productionSession): ProductionSession {
+            $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
+            $this->assertController($lockedSession, $request);
+            abort_if($lockedSession->status === 'downtime', 409, 'Selesaikan downtime terlebih dahulu.');
+            abort_unless($lockedSession->status === 'running', 409, 'Sesi produksi sudah selesai.');
 
-        ProductionSession::create([
-            'machine_id' => $machine->id,
-            'operator_id' => $defaultOperator->id ?? 1,
-            'start_time' => Carbon::now(),
-            'status' => 'running',
-            'planned_time_minutes' => 480
-        ]);
-        return redirect()->back();
-    }
+            $lastResumeTime = DowntimeLog::query()
+                ->where('production_session_id', $lockedSession->id)
+                ->whereNotNull('go_time')
+                ->latest('id')
+                ->value('go_time');
+            abort_if(
+                $lastResumeTime && Carbon::parse($lastResumeTime)->diffInSeconds(now()) < 3,
+                429,
+                'Mesin baru dijalankan kembali. Tunggu 3 detik sebelum menyelesaikan produksi.'
+            );
 
-    public function stopMachine(Request $request)
-    {
-        $activeSession = ProductionSession::where('status', 'running')->latest()->first();
-        if ($activeSession) {
-            $activeSession->update(['status' => 'downtime']);
-            DowntimeLog::create([
-                'production_session_id' => $activeSession->id,
-                'stop_time' => Carbon::now()
+            abort_if(
+                $lockedSession->start_time?->diffInSeconds(now()) < 3,
+                429,
+                'Sesi baru dimulai. Tunggu 3 detik sebelum menyelesaikan produksi.'
+            );
+
+            $lockedSession->update([
+                'status' => 'completed',
+                'end_time' => now(),
             ]);
-        }
-        return redirect()->back();
+
+            return $lockedSession;
+        });
+
+        return $this->sessionResponse($session);
     }
 
-    public function resumeMachine(Request $request)
+    public function acknowledge(Request $request, ProductionSession $productionSession): JsonResponse
     {
-        $activeSession = ProductionSession::where('status', 'downtime')->latest()->first();
-        if ($activeSession) {
-            $activeSession->update(['status' => 'running']);
-            $lastLog = DowntimeLog::where('production_session_id', $activeSession->id)
-                ->whereNull('go_time')->latest()->first();
+        DB::transaction(function () use ($request, $productionSession): void {
+            $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
+            $this->assertController($lockedSession, $request);
+            abort_unless($lockedSession->status === 'completed', 409, 'Sesi produksi belum selesai.');
+            $lockedSession->update(['controller_token_hash' => null]);
+        });
 
-            if ($lastLog) {
-                $goTime = Carbon::now();
-                $stopTime = Carbon::parse($lastLog->stop_time);
-                $duration = $stopTime->diffInSeconds($goTime);
-                
-                $lastLog->update([
-                    'go_time' => $goTime,
-                    'duration_seconds' => $duration,
-                    'downtime_category_id' => $request->category_id,
-                    'personnel_id' => $request->personnel_id,
-                    'replaced_component' => $request->replaced_component,
-                    'repair_action' => $request->repair_action
-                ]);
-            }
-        }
-        return redirect()->back();
+        return response()->json([
+            'data' => null,
+            'isController' => false,
+            'serverNow' => now('Asia/Jakarta')->toIso8601String(),
+            'availableSessions' => $this->availableSessionsPayload(),
+        ]);
     }
 
-    public function endSession(Request $request)
+    private function controllerHash(Request $request): string
     {
-        $activeSession = ProductionSession::whereIn('status', ['running', 'downtime'])->latest()->first();
-        if ($activeSession) {
-            $activeSession->update(['status' => 'completed', 'end_time' => Carbon::now()]);
-        }
-        return redirect()->back();
+        return ProductionSession::hashControllerToken(
+            (string) $request->attributes->get(EnsureDeviceToken::ATTRIBUTE)
+        );
+    }
+
+    private function assertController(ProductionSession $session, Request $request): void
+    {
+        abort_unless(
+            $session->controller_token_hash !== null
+                && hash_equals($session->controller_token_hash, $this->controllerHash($request)),
+            409,
+            'Kontrol sesi sudah berpindah ke tablet lain. Tekan Lanjutkan Sesi untuk mengambil alih kembali.',
+        );
+    }
+
+    private function sessionResponse(ProductionSession $session): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->sessionPayload($session->fresh(['machine.area', 'product', 'downtimeLogs'])),
+            'isController' => true,
+            'serverNow' => now('Asia/Jakarta')->toIso8601String(),
+        ]);
+    }
+
+    private function availableSessionsPayload(): array
+    {
+        return ProductionSession::with(['machine.area', 'product', 'downtimeLogs'])
+            ->active()
+            ->oldest('start_time')
+            ->get()
+            ->map(fn (ProductionSession $session) => $this->sessionPayload($session))
+            ->all();
+    }
+
+    private function sessionPayload(ProductionSession $session): array
+    {
+        $session->loadMissing(['machine.area', 'product', 'downtimeLogs']);
+        $activeDowntime = $session->downtimeLogs->firstWhere('go_time', null);
+        $closedDowntimes = $session->downtimeLogs->whereNotNull('go_time');
+        $elapsedSeconds = $session->start_time
+            ? (int) $session->start_time->diffInSeconds($session->end_time ?? now())
+            : 0;
+        $totalDowntimeSeconds = (int) $closedDowntimes->sum('duration_seconds');
+        $activeDowntimeSeconds = $activeDowntime
+            ? (int) Carbon::parse($activeDowntime->stop_time)->diffInSeconds(now())
+            : 0;
+        $totalDurationSeconds = max(0, $elapsedSeconds - $totalDowntimeSeconds - $activeDowntimeSeconds);
+
+        return [
+            'id' => $session->id,
+            'status' => $session->status,
+            'operatorName' => $session->operator_name,
+            'startTime' => $session->start_time?->copy()->timezone('Asia/Jakarta')->toIso8601String(),
+            'endTime' => $session->end_time?->copy()->timezone('Asia/Jakarta')->toIso8601String(),
+            'area' => [
+                'id' => $session->machine->area->id,
+                'name' => $session->machine->area->area_name,
+            ],
+            'product' => [
+                'id' => $session->product?->id,
+                'name' => $session->product?->product_name ?? 'Data lama',
+            ],
+            'machine' => [
+                'id' => $session->machine->id,
+                'name' => $session->machine->machine_name,
+            ],
+            'downtime' => $activeDowntime ? [
+                'id' => $activeDowntime->id,
+                'stopTime' => Carbon::parse($activeDowntime->stop_time)->timezone('Asia/Jakarta')->toIso8601String(),
+            ] : null,
+            'summary' => [
+                'totalDurationSeconds' => $totalDurationSeconds,
+                'hadDowntime' => $session->downtimeLogs->isNotEmpty(),
+                'downtimeCount' => $session->downtimeLogs->count(),
+                'totalDowntimeSeconds' => $totalDowntimeSeconds,
+                'hasIncompleteDowntime' => $session->status === 'completed' && $activeDowntime !== null,
+            ],
+        ];
     }
 }

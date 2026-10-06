@@ -3,49 +3,26 @@
 namespace App\Exports;
 
 use App\Models\DowntimeLog;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Carbon\Carbon;
 
-class DowntimeHistoryExport implements FromCollection, WithHeadings, WithMapping
+class DowntimeHistoryExport implements FromQuery, WithHeadings, WithMapping
 {
-    protected $filters;
+    public function __construct(private readonly array $filters) {}
 
-    public function __construct($filters)
+    public function query(): Builder
     {
-        $this->filters = $filters;
+        return DowntimeLog::query()->forHistory($this->filters);
     }
 
-    public function collection()
+    public function map(mixed $log): array
     {
-        $query = DowntimeLog::with(['productionSession.machine.area', 'downtimeCategory', 'personnel']);
+        assert($log instanceof DowntimeLog);
 
-        if (!empty($this->filters['start_date']) && !empty($this->filters['end_date'])) {
-            $start = Carbon::parse($this->filters['start_date'])->startOfDay();
-            $end = Carbon::parse($this->filters['end_date'])->endOfDay();
-            $query->whereBetween('stop_time', [$start, $end]);
-        }
-
-        if (!empty($this->filters['area_id'])) {
-            $query->whereHas('productionSession.machine', function($q) {
-                $q->where('area_id', $this->filters['area_id']);
-            });
-        }
-
-        if (!empty($this->filters['machine_id'])) {
-            $query->whereHas('productionSession', function($q) {
-                $q->where('machine_id', $this->filters['machine_id']);
-            });
-        }
-
-        return $query->latest()->get();
-    }
-
-    public function map($log): array
-    {
         return [
-            Carbon::parse($log->stop_time)->format('d-m-Y H:i:s'),
+            $log->stop_time->timezone('Asia/Jakarta')->format('d-m-Y H:i:s'),
             optional(optional($log->productionSession)->machine)->area->area_name ?? '-',
             optional(optional($log->productionSession)->machine)->machine_name ?? '-',
             optional($log->downtimeCategory)->category_name ?? '-',
@@ -53,6 +30,7 @@ class DowntimeHistoryExport implements FromCollection, WithHeadings, WithMapping
             $log->repair_action ?? '-',
             optional($log->personnel)->name ?? '-',
             round($log->duration_seconds / 60, 2),
+            $log->status_label,
         ];
     }
 
@@ -66,7 +44,8 @@ class DowntimeHistoryExport implements FromCollection, WithHeadings, WithMapping
             'Komponen Diganti',
             'Tindakan Perbaikan',
             'Pelaksana / Teknisi',
-            'Durasi (Menit)'
+            'Durasi (Menit)',
+            'Status',
         ];
     }
 }
