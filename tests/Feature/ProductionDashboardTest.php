@@ -27,7 +27,7 @@ class ProductionDashboardTest extends TestCase
         $this->assertStringContainsString("this.confirmAction = 'finish';", $script);
     }
 
-    public function test_ready_screen_contains_searchable_master_inputs_without_oee_cards(): void
+    public function test_dashboard_contains_searchable_master_inputs_and_oee_metrics(): void
     {
         $this->seed(ProductionMasterSeeder::class);
         $operator = User::factory()->create(['role' => 'operator']);
@@ -46,9 +46,16 @@ class ProductionDashboardTest extends TestCase
             ->assertSee('Mulai Mesin')
             ->assertSee('Total Downtime')
             ->assertSee('OKE')
-            ->assertDontSee('Dashboard OEE')
-            ->assertDontSee('Availability')
-            ->assertDontSee('Performance');
+            ->assertSee('OEE Mesin')
+            ->assertSee('78.8%')
+            ->assertSee('Availability')
+            ->assertSee('92.0%')
+            ->assertSee('Performance')
+            ->assertSee('87.4%')
+            ->assertSee('Quality')
+            ->assertSee('98.0%')
+            ->assertDontSee('DATA DUMMY')
+            ->assertDontSee('Belum terhubung ke data mesin atau input produksi.');
     }
 
     public function test_ready_screen_offers_active_sessions_for_takeover(): void

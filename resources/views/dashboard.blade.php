@@ -348,6 +348,28 @@
                     </div>
                 </div>
 
+                <section aria-labelledby="oee-preview-title" class="mt-5 border-y border-slate-200">
+                    <div class="flex items-end justify-between gap-4 py-3">
+                        <h3 id="oee-preview-title" class="text-sm font-bold uppercase tracking-wider text-slate-500">OEE Mesin</h3>
+                        <p class="font-mono text-3xl font-black leading-none tabular-nums text-indigo-700">78.8%</p>
+                    </div>
+
+                    <dl class="grid grid-cols-3 divide-x divide-slate-200 border-t border-slate-200">
+                        <div class="py-3 pr-3">
+                            <dt class="text-[11px] font-bold text-slate-500 sm:text-xs">Availability</dt>
+                            <dd class="mt-1 font-mono text-xl font-extrabold tabular-nums text-slate-900">92.0%</dd>
+                        </div>
+                        <div class="px-3 py-3">
+                            <dt class="text-[11px] font-bold text-slate-500 sm:text-xs">Performance</dt>
+                            <dd class="mt-1 font-mono text-xl font-extrabold tabular-nums text-slate-900">87.4%</dd>
+                        </div>
+                        <div class="py-3 pl-3">
+                            <dt class="text-[11px] font-bold text-slate-500 sm:text-xs">Quality</dt>
+                            <dd class="mt-1 font-mono text-xl font-extrabold tabular-nums text-slate-900">98.0%</dd>
+                        </div>
+                    </dl>
+                </section>
+
                 <!-- Tombol Kendali Saat Mesin Berjalan -->
                 <div x-show="state === 'running' && isController" class="mt-6 flex flex-col sm:flex-row gap-4" :class="{ 'pointer-events-none opacity-50': cooldown || busy }">
                     <button type="button" @click="stop" :disabled="busy || cooldown" class="min-h-[58px] flex-1 rounded-xl bg-red-700 px-6 py-3.5 text-base sm:text-lg font-bold tracking-wider text-white shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
