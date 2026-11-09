@@ -32,7 +32,7 @@ class ProductionDashboardTest extends TestCase
         $view = file_get_contents(resource_path('views/dashboard.blade.php'));
 
         $this->assertMatchesRegularExpression(
-            '/<button[^>]*@click="stop"[^>]*class="[^"]*bg-red-700[^"]*"[^>]*>\s*<svg[^>]*aria-hidden="true"[^>]*>.*?<span>STOP MESIN<\/span>/s',
+            '/<button[^>]*@click="askStop"[^>]*class="[^"]*bg-red-700[^"]*"[^>]*>\s*<svg[^>]*aria-hidden="true"[^>]*>.*?<span>STOP MESIN<\/span>/s',
             $view,
         );
         $this->assertMatchesRegularExpression(

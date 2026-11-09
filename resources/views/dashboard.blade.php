@@ -292,7 +292,7 @@
 
                 <!-- Tombol Kendali Saat Mesin Berjalan -->
                 <div x-show="state === 'running' && isController" class="mt-6 flex flex-col sm:flex-row gap-4" :class="{ 'pointer-events-none opacity-50': cooldown || busy }">
-                    <button type="button" @click="stop" :disabled="busy || cooldown" class="min-h-[58px] flex-1 rounded-xl bg-red-700 px-6 py-3.5 text-base sm:text-lg font-bold tracking-wider text-white shadow-md hover:bg-red-800 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                    <button type="button" @click="askStop" :disabled="busy || cooldown" class="min-h-[58px] flex-1 rounded-xl bg-red-700 px-6 py-3.5 text-base sm:text-lg font-bold tracking-wider text-white shadow-md hover:bg-red-800 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                         <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <rect x="5" y="5" width="10" height="10" rx="1" />
                         </svg>
@@ -461,7 +461,7 @@
         </section>
 
         <!-- Dialog Konfirmasi In-Page Tablet-Friendly -->
-        <div x-show="confirmAction" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="confirmTitle">
+        <div x-show="confirmAction" x-cloak @keydown.escape.window="cancelConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="confirmTitle">
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
                 <h3 class="text-xl font-bold text-slate-900" x-text="confirmTitle"></h3>
                 <p class="mt-2 text-base text-slate-600 leading-relaxed" x-text="confirmMessage"></p>
@@ -492,10 +492,14 @@
         </div>
 
         <!-- Dialog Pemberitahuan Sistem In-Page Tablet-Friendly -->
-        <div x-show="alertDialogMessage" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="alertTitle || 'Pemberitahuan Sistem'">
+        <div x-show="alertDialogMessage" x-cloak @keydown.escape.window="alertDialogMessage = ''" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="alertTitle || 'Pemberitahuan Sistem'">
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
                 <div class="flex items-center gap-3">
-                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-2xl font-black">⚠️</span>
+                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                        <svg class="h-6 w-6" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 3L2.5 16h15L10 3zM10 7v4m0 2.5h.01" />
+                        </svg>
+                    </span>
                     <div>
                         <h3 class="text-xl font-bold text-slate-900" x-text="alertTitle || 'Pemberitahuan Sistem'"></h3>
                         <p class="text-xs text-slate-500 font-medium">Stasiun Kontrol Produksi</p>

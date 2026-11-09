@@ -72,4 +72,22 @@ class RoleAccessTest extends TestCase
             'password' => 'password',
         ])->assertRedirect(route('history.index'));
     }
+
+    public function test_login_rejects_an_account_without_an_allowed_role(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'unknown@example.com',
+            'password' => 'password',
+            'role' => 'unknown',
+        ]);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertSessionHasErrors([
+            'email' => 'Akun ini belum punya akses. Hubungi supervisor.',
+        ]);
+
+        $this->assertGuest();
+    }
 }

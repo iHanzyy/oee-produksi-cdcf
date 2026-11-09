@@ -133,19 +133,28 @@ class ProductionController extends Controller
     public function status(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'session_id' => ['nullable', 'integer', 'exists:production_sessions,id'],
+            'session_id' => ['nullable', 'integer'],
+        ], [
+            'session_id.integer' => 'ID sesi produksi tidak valid.',
         ]);
         $controllerHash = $this->controllerHash($request);
 
         $session = isset($validated['session_id'])
-            ? ProductionSession::findOrFail($validated['session_id'])
+            ? ProductionSession::find($validated['session_id'])
             : ProductionSession::where('controller_token_hash', $controllerHash)->latest()->first();
+
+        $isController = $session !== null
+            && $session->controller_token_hash !== null
+            && hash_equals($session->controller_token_hash, $controllerHash);
+
+        // ponytail: non-controller browsers only see active sessions for takeover; completed sessions stay private to controller/SPV.
+        if ($session !== null && ! $isController && ! in_array($session->status, ['running', 'downtime'], true)) {
+            $session = null;
+        }
 
         return response()->json([
             'data' => $session ? $this->sessionPayload($session) : null,
-            'isController' => $session !== null
-                && $session->controller_token_hash !== null
-                && hash_equals($session->controller_token_hash, $controllerHash),
+            'isController' => $isController,
             'serverNow' => now('Asia/Jakarta')->toIso8601String(),
         ]);
     }
@@ -155,7 +164,7 @@ class ProductionController extends Controller
         $session = DB::transaction(function () use ($request, $productionSession): ProductionSession {
             $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
             $this->assertController($lockedSession, $request);
-            abort_unless($lockedSession->status === 'running', 409, 'Mesin tidak dalam status berjalan.');
+            abort_unless($lockedSession->status === 'running', 409, 'Mesin sedang tidak berjalan.');
 
             // Proteksi backend: cegah stop mesin dalam waktu 2 detik setelah resume untuk mencegah loop downtime
             if (! app()->runningUnitTests()) {
@@ -170,7 +179,7 @@ class ProductionController extends Controller
                     abort_if(
                         $secondsSinceResume < 3,
                         429,
-                        'Mesin baru saja dijalankan. Harap tunggu beberapa detik sebelum menghentikan mesin kembali.'
+                        'Mesin baru saja dinyalakan. Tunggu beberapa detik sebelum menghentikan mesin lagi.'
                     );
                 }
 
@@ -179,7 +188,7 @@ class ProductionController extends Controller
                     abort_if(
                         $secondsSinceStart < 2,
                         429,
-                        'Mesin baru saja dimulai. Harap tunggu beberapa detik sebelum menghentikan mesin.'
+                        'Mesin baru saja dimulai. Tunggu beberapa detik sebelum menghentikan mesin.'
                     );
                 }
             }
@@ -202,14 +211,14 @@ class ProductionController extends Controller
         $session = DB::transaction(function () use ($request, $productionSession, $validated): ProductionSession {
             $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
             $this->assertController($lockedSession, $request);
-            abort_unless($lockedSession->status === 'downtime', 409, 'Mesin tidak dalam status downtime.');
+            abort_unless($lockedSession->status === 'downtime', 409, 'Mesin sedang berjalan, tidak dalam kondisi downtime.');
 
             $log = DowntimeLog::query()
                 ->where('production_session_id', $lockedSession->id)
                 ->whereNull('go_time')
                 ->lockForUpdate()
                 ->first();
-            abort_if($log === null, 409, 'Log downtime aktif tidak ditemukan.');
+            abort_if($log === null, 409, 'Data kendala mesin tidak ditemukan. Muat ulang halaman lalu coba lagi.');
 
             $goTime = now();
             $log->update([

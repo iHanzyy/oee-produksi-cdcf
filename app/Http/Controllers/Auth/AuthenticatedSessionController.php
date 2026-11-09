@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -31,8 +32,18 @@ class AuthenticatedSessionController extends Controller
         $route = match ($request->user()->role) {
             'operator' => 'dashboard',
             'spv', 'manager' => 'history.index',
-            default => abort(403),
+            default => null,
         };
+
+        if ($route === null) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun ini belum punya akses. Hubungi supervisor.',
+            ]);
+        }
 
         return redirect()->route($route);
     }

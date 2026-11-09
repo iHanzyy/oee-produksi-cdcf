@@ -84,7 +84,8 @@ class ProductionSessionControlTest extends TestCase
                 'operator_name' => 'Budi',
             ])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['batch_number']);
+            ->assertJsonValidationErrors(['batch_number'])
+            ->assertJsonPath('errors.batch_number.0', 'Nomor batch wajib diisi.');
 
         $this->assertDatabaseCount('production_sessions', 0);
     }
@@ -213,6 +214,31 @@ class ProductionSessionControlTest extends TestCase
         $session = ProductionSession::findOrFail($sessionId);
         $this->assertSame(ProductionSession::hashControllerToken($newToken), $session->controller_token_hash);
         $this->assertStringEndsWith('+07:00', $startTime);
+    }
+
+    public function test_non_controller_cannot_read_a_completed_session_by_id(): void
+    {
+        [$operator, $area, $product, $machine] = $this->productionFixture();
+        $ownerToken = $this->deviceToken($operator);
+        $otherToken = $this->deviceToken($operator);
+        $started = $this->postStartSession($operator, $ownerToken, $area, $product, $machine)->assertCreated();
+        $session = ProductionSession::findOrFail($started->json('data.id'));
+        $session->update([
+            'status' => 'completed',
+            'end_time' => now(),
+        ]);
+
+        $this->withCookie('device_token', $otherToken)
+            ->getJson(route('production.status', ['session_id' => $session->id]))
+            ->assertOk()
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('isController', false);
+
+        $this->withCookie('device_token', $ownerToken)
+            ->getJson(route('production.status', ['session_id' => $session->id]))
+            ->assertOk()
+            ->assertJsonPath('data.id', $session->id)
+            ->assertJsonPath('isController', true);
     }
 
     public function test_session_cannot_complete_immediately_after_start(): void

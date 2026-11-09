@@ -32,8 +32,9 @@ class HistoryController extends Controller
             ->get()
             ->map(fn (ProductionSession $session) => $this->sessionPayload($session))
             ->values();
+        $serverNow = now('Asia/Jakarta')->toIso8601String();
 
-        return view('history', compact('completedSessions', 'logs', 'areas', 'machines', 'activeSessions'));
+        return view('history', compact('completedSessions', 'logs', 'areas', 'machines', 'activeSessions', 'serverNow'));
     }
 
     public function activeSessions(): JsonResponse

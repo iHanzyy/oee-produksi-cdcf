@@ -32,6 +32,21 @@ class HistoryFilterRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'start_date.date_format' => 'Format tanggal mulai tidak sesuai (gunakan YYYY-MM-DD).',
+            'start_date.required_with' => 'Tanggal mulai wajib diisi jika tanggal akhir dipilih.',
+            'end_date.date_format' => 'Format tanggal akhir tidak sesuai (gunakan YYYY-MM-DD).',
+            'end_date.required_with' => 'Tanggal akhir wajib diisi jika tanggal mulai dipilih.',
+            'end_date.after_or_equal' => 'Tanggal akhir tidak boleh lebih awal dari tanggal mulai.',
+            'area_id.integer' => 'Area yang dipilih tidak valid.',
+            'area_id.exists' => 'Area produksi tidak ditemukan.',
+            'machine_id.integer' => 'Mesin yang dipilih tidak valid.',
+            'machine_id.exists' => 'Mesin tidak ditemukan pada area yang dipilih.',
+        ];
+    }
+
     public function filters(): array
     {
         return array_filter(

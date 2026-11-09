@@ -18,7 +18,7 @@
                 <div class="px-6 py-8 sm:px-10 sm:py-10">
                     <header class="mb-8 text-center">
                         <div class="mx-auto h-20 w-56 overflow-hidden" aria-hidden="true">
-                            <img src="{{ asset('brand/logo-oee.png') }}" alt="" class="w-56 -translate-y-7">
+                            <img src="{{ asset('brand/logo-oee.png') }}" alt="" width="1672" height="941" class="w-56 -translate-y-7">
                         </div>
                         <h1 id="login-title" class="mt-3 text-2xl font-bold tracking-tight text-slate-950">Masuk</h1>
                     </header>

@@ -28,4 +28,19 @@ class ResumeProductionSessionRequest extends FormRequest
             'repair_action' => ['required', 'string', 'max:1000'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'category_id.required' => 'Pilih kategori kendala dulu.',
+            'category_id.integer' => 'Kategori kendala tidak valid.',
+            'category_id.exists' => 'Kategori kendala tidak ditemukan.',
+            'personnel_id.required' => 'Pilih pelaksana perbaikan dulu.',
+            'personnel_id.integer' => 'Pelaksana perbaikan tidak valid.',
+            'personnel_id.exists' => 'Data pelaksana perbaikan tidak ditemukan.',
+            'replaced_component.max' => 'Nama komponen maksimal 255 karakter.',
+            'repair_action.required' => 'Isi tindakan perbaikan yang sudah dilakukan.',
+            'repair_action.max' => 'Catatan perbaikan maksimal 1000 karakter.',
+        ];
+    }
 }

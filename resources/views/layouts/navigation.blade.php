@@ -5,7 +5,7 @@
                 <!-- Logo Aplikasi Pabrik -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ auth()->user()->role === 'operator' ? route('dashboard') : route('history.index') }}" class="block h-12 w-32 overflow-hidden sm:w-36" aria-label="OEE Produksi">
-                        <img src="{{ asset('brand/logo-oee.png') }}" alt="" class="w-32 -translate-y-3.5 sm:w-36 sm:-translate-y-4">
+                        <img src="{{ asset('brand/logo-oee.png') }}" alt="" width="1672" height="941" class="w-32 -translate-y-3.5 sm:w-36 sm:-translate-y-4">
                     </a>
                 </div>
 

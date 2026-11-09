@@ -153,6 +153,29 @@ class HistoryReportingTest extends TestCase
         $this->assertSame('-', $export->map($legacy->fresh()->load('productionSession.machine.area', 'downtimeCategory', 'personnel'))[3]);
     }
 
+    public function test_export_escapes_spreadsheet_formula_text(): void
+    {
+        $area = Area::create(['area_name' => 'Tablet Hormon']);
+        $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
+        $log = $this->createDowntime(
+            $machine,
+            '2026-09-24 01:00:00',
+            'completed',
+            '2026-09-24 01:05:00',
+            300,
+            '=HYPERLINK("https://example.test")',
+        );
+        $log->update(['repair_action' => '+CMD']);
+
+        $row = (new DowntimeHistoryExport([]))->map(
+            $log->fresh()->load('productionSession.machine.area', 'downtimeCategory', 'personnel'),
+        );
+
+        $this->assertSame("'=HYPERLINK(\"https://example.test\")", $row[3]);
+        $this->assertSame("'+CMD", $row[6]);
+        $this->assertSame(5.0, $row[8]);
+    }
+
     public function test_history_distinguishes_active_incomplete_and_completed_logs_in_jakarta_time(): void
     {
         $manager = User::factory()->create(['role' => 'manager']);

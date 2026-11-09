@@ -1,5 +1,3 @@
-import './bootstrap';
-
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
@@ -7,6 +5,7 @@ window.Alpine = Alpine;
 Alpine.data('productionControl', (config) => ({
     session: config.initial.data,
     isController: config.initial.isController,
+    clockOffsetMs: config.initial?.serverNow ? Date.parse(config.initial.serverNow) - Date.now() : 0,
     areas: config.areas,
     categories: config.categories,
     personnels: config.personnels,
@@ -46,14 +45,16 @@ Alpine.data('productionControl', (config) => ({
     init() {
         this.updateElapsed();
         this.clockTimer = window.setInterval(() => this.updateElapsed(), 1000);
-        // Polling 15 detik agar tidak membebani jaringan atau mengganggu render UI tablet
-        // Tektokan realtime tiap 2 detik
-        this.pollTimer = window.setInterval(() => this.poll(), 2000);
+        this.pollTimer = window.setInterval(() => this.poll(), 5000);
     },
 
     destroy() {
         window.clearInterval(this.clockTimer);
         window.clearInterval(this.pollTimer);
+    },
+
+    nowMs() {
+        return Date.now() + this.clockOffsetMs;
     },
 
     get state() {
@@ -149,7 +150,7 @@ Alpine.data('productionControl', (config) => ({
         });
 
         if (succeeded) {
-            this.successBanner = 'Sesi produksi berhasil dimulai! Menstabilkan stasiun...';
+            this.successBanner = 'Sesi produksi dimulai. Mesin siap dipantau.';
             window.setTimeout(() => {
                 this.successBanner = '';
             }, 3000);
@@ -166,7 +167,6 @@ Alpine.data('productionControl', (config) => ({
     },
 
     askStop() {
-        // Blokir jika sedang cooldown, busy, atau baru saja mulai/resume dalam 3 detik
         if (this.cooldown || this.busy || (Date.now() - this.lastActionTime < 3000)) return;
         this.confirmTitle = 'Konfirmasi STOP MESIN';
         this.confirmMessage = 'Hentikan mesin dan mulai mencatat downtime kendala untuk mesin ini?';
@@ -185,18 +185,17 @@ Alpine.data('productionControl', (config) => ({
             this.showDowntimeForm = false;
             this.formError = '';
             this.showAlert(
-                'Mesin sedang downtime. Setelah proses perbaikan selesai, tekan tombol Selesai Downtime dan isi form kendala.',
+                'Mesin sedang downtime. Setelah perbaikan selesai, tekan Selesai Downtime lalu isi form kendala.',
                 'Pemberitahuan Mesin'
             );
         }
     },
 
     askFinish() {
-        // Blokir jika sedang cooldown, busy, atau baru saja mulai/resume dalam 3 detik
         if (this.cooldown || this.busy || (Date.now() - this.lastActionTime < 3000)) return;
         this.actualOutputKg = '';
         this.confirmTitle = 'Konfirmasi Selesai Produksi';
-        this.confirmMessage = 'Apakah Anda yakin ingin menyelesaikan sesi produksi mesin ini? Pastikan proses produksi telah tuntas.';
+        this.confirmMessage = 'Pastikan proses produksi untuk batch ini sudah tuntas sebelum menyimpan output aktual.';
         this.confirmButtonText = 'Selesaikan Produksi';
         this.confirmAction = 'finish';
         this.confirmReady = false;
@@ -243,23 +242,20 @@ Alpine.data('productionControl', (config) => ({
         this.formError = '';
 
         if (!this.categoryId) {
-            this.formError = 'Pilih kategori kendala terlebih dahulu.';
+            this.formError = 'Pilih kategori kendala dulu.';
             return;
         }
 
         if (!this.personnelId) {
-            this.formError = 'Pilih pelaksana perbaikan terlebih dahulu.';
+            this.formError = 'Pilih pelaksana perbaikan dulu.';
             return;
         }
 
         if (!this.repairAction || !this.repairAction.trim()) {
-            this.formError = 'Isi penjelasan tindakan perbaikan yang telah dilakukan.';
+            this.formError = 'Isi tindakan perbaikan yang sudah dilakukan.';
             return;
         }
 
-        // KUNCI COOLDOWN SEBELUM MUTATE:
-        // Ini memastikan saat DOM berganti kembali ke "running", cooldown SUDAH AKTIF
-        // sehingga synthetic touch / pointer click di tablet TIDAK BISA mengenai tombol STOP MESIN!
         this.cooldown = true;
         this.lastActionTime = Date.now();
 
@@ -277,11 +273,10 @@ Alpine.data('productionControl', (config) => ({
             this.replacedComponent = '';
             this.repairAction = '';
             this.formError = '';
-            this.successBanner = 'Mesin berhasil dijalankan kembali!';
+            this.successBanner = 'Mesin kembali berjalan.';
             window.setTimeout(() => {
                 this.successBanner = '';
             }, 3000);
-            // Kunci 3 detik agar sama dengan proteksi backend dan mencegah tap-through
             window.setTimeout(() => {
                 this.cooldown = false;
             }, 3000);
@@ -295,7 +290,7 @@ Alpine.data('productionControl', (config) => ({
             this.cooldown
             || this.busy
             || this.session?.status !== 'running'
-            || Date.now() - Date.parse(this.session.startTime) < 3000
+            || this.nowMs() - Date.parse(this.session.startTime) < 3000
         ) return;
 
         await this.mutate(`${config.urls.base}/${this.session.id}/complete-confirmed`, {
@@ -315,12 +310,10 @@ Alpine.data('productionControl', (config) => ({
     },
 
     async poll() {
-        // Jangan polling jika operator sedang mengetik/mengisi form kendala atau membuka dropdown
         if (this.busy || this.confirmAction || this.showDowntimeForm || this.productMenuOpen || this.machineMenuOpen) {
             return;
         }
 
-        // Jangan polling jika tab browser sedang di latar belakang
         if (typeof document !== 'undefined' && document.hidden) {
             return;
         }
@@ -331,6 +324,10 @@ Alpine.data('productionControl', (config) => ({
             const response = await fetch(`${config.urls.status}${query}`, {
                 headers: { Accept: 'application/json' },
             });
+            if (response.status === 401) {
+                window.location.reload();
+                return;
+            }
             if (!response.ok) return;
             this.apply(await response.json());
         } catch {
@@ -352,23 +349,42 @@ Alpine.data('productionControl', (config) => ({
                 },
                 body: JSON.stringify(body),
             });
-            const payload = await response.json();
+
+            let payload = null;
+            try {
+                payload = await response.json();
+            } catch {
+                payload = null;
+            }
 
             if (!response.ok) {
-                const message = payload.message ?? 'Permintaan tidak dapat diproses.';
+                if (response.status === 401) {
+                    window.location.reload();
+                    return false;
+                }
+                const firstFieldError = payload?.errors
+                    ? Object.values(payload.errors).flat()[0]
+                    : null;
+                const message = firstFieldError
+                    || payload?.message
+                    || (response.status === 419
+                        ? 'Halaman sudah terlalu lama dibuka. Muat ulang halaman lalu coba lagi.'
+                        : 'Permintaan belum bisa diproses. Coba lagi.');
                 this.error = message;
                 this.formError = message;
                 this.showAlert(message, 'Pemberitahuan Sistem');
                 return false;
             }
 
-            this.apply(payload);
+            if (payload) {
+                this.apply(payload);
+            }
             return true;
         } catch {
-            const err = 'Koneksi ke server terputus. Periksa jaringan tablet.';
+            const err = 'Koneksi ke server terputus. Periksa jaringan Wi-Fi tablet lalu coba lagi.';
             this.error = err;
             this.formError = err;
-            this.showAlert(err, 'Kendala Jaringan');
+            this.showAlert(err, 'Gangguan Jaringan');
             return false;
         } finally {
             this.busy = false;
@@ -376,15 +392,14 @@ Alpine.data('productionControl', (config) => ({
     },
 
     apply(payload) {
-        if (!payload) return;
+        if (payload?.serverNow) {
+            this.clockOffsetMs = Date.parse(payload.serverNow) - Date.now();
+        }
 
-        // 1. Update status pengendali hanya bila berbeda
         if (this.isController !== payload.isController) {
             this.isController = payload.isController;
         }
 
-        // 2. Update session hanya jika ada perubahan id/status/downtime nyata
-        // Ini mencegah Alpine me-render ulang seluruh komponen DOM setiap polling
         const currentId = this.session?.id ?? null;
         const newId = payload.data?.id ?? null;
         const currentStatus = this.session?.status ?? null;
@@ -404,7 +419,6 @@ Alpine.data('productionControl', (config) => ({
             this.session.oee = payload.data.oee;
             this.session.endTime = payload.data.endTime;
         }
-
     },
 
     updateElapsed() {
@@ -414,7 +428,7 @@ Alpine.data('productionControl', (config) => ({
             return;
         }
 
-        const now = Date.now();
+        const now = this.nowMs();
         const end = this.session.endTime ? Date.parse(this.session.endTime) : now;
         const totalSeconds = Math.max(0, Math.floor((end - Date.parse(this.session.startTime)) / 1000));
         const previousDowntimeSeconds = Number(this.session.summary?.totalDowntimeSeconds ?? 0);
@@ -458,16 +472,16 @@ Alpine.data('productionControl', (config) => ({
 Alpine.data('historyMonitoring', (config) => ({
     sessions: config.initial || [],
     url: config.url,
+    clockOffsetMs: config.serverNow ? Date.parse(config.serverNow) - Date.now() : 0,
     clockTimer: null,
     pollTimer: null,
-    now: Date.now(),
+    now: config.serverNow ? Date.parse(config.serverNow) : Date.now(),
 
     init() {
         this.clockTimer = window.setInterval(() => {
-            this.now = Date.now();
+            this.now = Date.now() + this.clockOffsetMs;
         }, 1000);
-        // Tektokan realtime tiap 2 detik
-        this.pollTimer = window.setInterval(() => this.poll(), 2000);
+        this.pollTimer = window.setInterval(() => this.poll(), 5000);
     },
 
     destroy() {
@@ -500,6 +514,10 @@ Alpine.data('historyMonitoring', (config) => ({
             });
             if (!res.ok) return;
             const data = await res.json();
+            if (data.serverNow) {
+                this.clockOffsetMs = Date.parse(data.serverNow) - Date.now();
+                this.now = Date.now() + this.clockOffsetMs;
+            }
             if (data.sessions) {
                 this.sessions = data.sessions;
             }
