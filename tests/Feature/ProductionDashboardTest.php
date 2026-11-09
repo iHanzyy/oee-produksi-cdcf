@@ -27,7 +27,7 @@ class ProductionDashboardTest extends TestCase
         $this->assertStringContainsString("this.confirmAction = 'finish';", $script);
     }
 
-    public function test_dashboard_contains_searchable_master_inputs_and_oee_metrics(): void
+    public function test_dashboard_contains_searchable_master_inputs_without_fake_oee_metrics(): void
     {
         $this->seed(ProductionMasterSeeder::class);
         $operator = User::factory()->create(['role' => 'operator']);
@@ -35,12 +35,13 @@ class ProductionDashboardTest extends TestCase
         $response = $this->actingAs($operator)->get(route('dashboard'));
 
         $response->assertOk()
+            ->assertSee('brand/logo-oee.png')
+            ->assertDontSee('OEE PRODUKSI')
             ->assertSee('Mulai Sesi Produksi')
             ->assertSee('Nama Operator')
             ->assertSee('Nomor Batch')
             ->assertSee('id="batch_number"', false)
             ->assertSee('x-model.trim="batchNumber"', false)
-            ->assertSee('x-text="item.batchNumber || \'-\'"', false)
             ->assertSee('x-text="session?.batchNumber || \'-\'"', false)
             ->assertSee('product-options')
             ->assertSee('machine-options')
@@ -51,19 +52,16 @@ class ProductionDashboardTest extends TestCase
             ->assertSee('Mulai Mesin')
             ->assertSee('Total Downtime')
             ->assertSee('OKE')
-            ->assertSee('OEE Mesin')
-            ->assertSee('78.8%')
-            ->assertSee('Availability')
-            ->assertSee('92.0%')
-            ->assertSee('Performance')
-            ->assertSee('87.4%')
-            ->assertSee('Quality')
-            ->assertSee('98.0%')
+            ->assertDontSee('OEE Mesin')
+            ->assertDontSee('78.8%')
+            ->assertDontSee('92.0%')
+            ->assertDontSee('87.4%')
+            ->assertDontSee('98.0%')
             ->assertDontSee('DATA DUMMY')
             ->assertDontSee('Belum terhubung ke data mesin atau input produksi.');
     }
 
-    public function test_ready_screen_offers_active_sessions_for_takeover(): void
+    public function test_ready_screen_does_not_list_active_sessions_from_other_machines(): void
     {
         $operator = User::factory()->create(['role' => 'operator']);
         $area = Area::create(['area_name' => 'Tablet Hormon']);
@@ -82,10 +80,8 @@ class ProductionDashboardTest extends TestCase
         $this->actingAs($operator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Lanjutkan Sesi')
-            ->assertSee('Mixing')
-            ->assertSee('Siti')
-            ->assertSee('BATCH-DASH-001');
+            ->assertDontSee('Siti')
+            ->assertDontSee('BATCH-DASH-001');
     }
 
     public function test_dashboard_displays_downtime_state_and_form_options_for_active_session(): void

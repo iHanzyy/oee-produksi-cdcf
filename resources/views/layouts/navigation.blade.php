@@ -1,12 +1,11 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
+<nav x-data="{ open: false }" class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16 sm:h-18">
-            <div class="flex items-center space-x-4 sm:space-x-8">
+        <div class="flex h-16 items-center justify-between">
+            <div class="flex items-center gap-4 sm:gap-8">
                 <!-- Logo Aplikasi Pabrik -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ auth()->user()->role === 'operator' ? route('dashboard') : route('history.index') }}" class="font-extrabold text-lg sm:text-xl text-indigo-700 tracking-wider flex items-center gap-2">
-                        <span class="inline-block w-3 h-3 rounded-full bg-indigo-600"></span>
-                        KONTROL PRODUKSI
+                    <a href="{{ auth()->user()->role === 'operator' ? route('dashboard') : route('history.index') }}" class="block h-12 w-36 overflow-hidden" aria-label="OEE Produksi">
+                        <img src="{{ asset('brand/logo-oee.png') }}" alt="" class="w-36 -translate-y-4">
                     </a>
                 </div>
 
@@ -25,15 +24,15 @@
             </div>
 
             <!-- User Info & Logout Button - Always visible & comfortable for tablet touch -->
-            <div class="flex items-center space-x-2 sm:space-x-4">
-                <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-                    <span class="font-bold text-indigo-700 mr-1.5 uppercase">{{ auth()->user()->role ?? 'Operator' }}</span>
-                    <span class="text-slate-600 hidden xs:inline">| {{ Auth::user()->name }}</span>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <span class="hidden items-center rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 sm:inline-flex">
+                    <span class="mr-1.5 font-bold uppercase text-[#005cb9]">{{ auth()->user()->role ?? 'Operator' }}</span>
+                    <span>| {{ Auth::user()->name }}</span>
                 </span>
                 
                 <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
-                    <button type="submit" class="min-h-[42px] px-3.5 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-xs uppercase tracking-wider transition-colors">
+                    <button type="submit" class="min-h-[42px] rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#005cb9] focus-visible:ring-offset-2">
                         Keluar
                     </button>
                 </form>

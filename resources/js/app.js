@@ -7,7 +7,6 @@ window.Alpine = Alpine;
 Alpine.data('productionControl', (config) => ({
     session: config.initial.data,
     isController: config.initial.isController,
-    availableSessions: config.initial.availableSessions,
     areas: config.areas,
     categories: config.categories,
     personnels: config.personnels,
@@ -34,7 +33,6 @@ Alpine.data('productionControl', (config) => ({
     confirmReady: false,
     alertTitle: 'Pemberitahuan Sistem',
     alertDialogMessage: '',
-    showOtherSessions: false,
     elapsed: '00:00:00',
     downtimeElapsed: '00:00:00',
     busy: false,
@@ -71,10 +69,6 @@ Alpine.data('productionControl', (config) => ({
 
     get machines() {
         return this.selectedArea?.machines ?? [];
-    },
-
-    get otherSessions() {
-        return (this.availableSessions ?? []).filter((item) => item.id !== this.session?.id);
     },
 
     get filteredProducts() {
@@ -398,19 +392,6 @@ Alpine.data('productionControl', (config) => ({
             this.session.endTime = payload.data.endTime;
         }
 
-        // 3. Update daftar sesi mesin aktif hanya jika komposisi sesi berubah
-        if (payload.availableSessions) {
-            const currentHash = (this.availableSessions || [])
-                .map((item) => `${item.id}:${item.status}`)
-                .join('|');
-            const newHash = payload.availableSessions
-                .map((item) => `${item.id}:${item.status}`)
-                .join('|');
-
-            if (currentHash !== newHash) {
-                this.availableSessions = payload.availableSessions;
-            }
-        }
     },
 
     updateElapsed() {

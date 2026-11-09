@@ -16,7 +16,8 @@ class AuthenticationTest extends TestCase
 
         $response
             ->assertStatus(200)
-            ->assertSee('OEE Produksi')
+            ->assertSee('brand/logo-oee.png')
+            ->assertDontSee('>LOGO<', false)
             ->assertSee('Username')
             ->assertSee('Password')
             ->assertDontSee('Forgot your password?')

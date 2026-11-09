@@ -15,15 +15,12 @@
     <body class="min-h-screen bg-slate-50 text-slate-900 antialiased [font-family:Manrope,sans-serif]">
         <main class="flex min-h-screen items-center justify-center p-4 sm:p-8">
             <section class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-blue-950/10" aria-labelledby="login-title">
-                <div class="h-1.5 bg-[#01c5f0]" aria-hidden="true"></div>
-
                 <div class="px-6 py-8 sm:px-10 sm:py-10">
                     <header class="mb-8 text-center">
-                        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-[#005cb9] text-[10px] font-bold tracking-[0.18em] text-white">
-                            LOGO
+                        <div class="mx-auto h-20 w-56 overflow-hidden" aria-hidden="true">
+                            <img src="{{ asset('brand/logo-oee.png') }}" alt="" class="w-56 -translate-y-7">
                         </div>
-                        <p class="mt-4 text-sm font-semibold text-[#005cb9]">OEE Produksi</p>
-                        <h1 id="login-title" class="mt-2 text-2xl font-bold tracking-tight text-slate-950">Masuk</h1>
+                        <h1 id="login-title" class="mt-3 text-2xl font-bold tracking-tight text-slate-950">Masuk</h1>
                     </header>
 
                     @if (session('status'))

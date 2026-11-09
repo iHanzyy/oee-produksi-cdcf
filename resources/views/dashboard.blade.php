@@ -11,17 +11,11 @@
                 base: @js(url('/production-sessions')),
             },
         })"
-        class="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8"
+        class="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8"
     >
-        <!-- Header Layar Tablet -->
-        <header class="mb-5 flex flex-col gap-1 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <p class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500">Stasiun Produksi Pabrik</p>
-                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Kontrol Sesi Mesin</h1>
-            </div>
-            <div class="text-xs sm:text-sm font-medium text-slate-500">
-                Satu layar kontrol untuk operator & tablet mesin
-            </div>
+        <header class="mb-6">
+            <p class="text-sm font-semibold text-[#005cb9]">Stasiun Produksi</p>
+            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Kontrol Mesin</h1>
         </header>
 
 
@@ -36,76 +30,18 @@
         </div>
 
         <!-- 1. STATUS READY (Mulai Produksi Baru) -->
-        <section x-show="state === 'ready'" aria-labelledby="start-title" class="space-y-6">
-            <!-- Pemantauan Mesin Sedang Berjalan di Seluruh Pabrik -->
-            <div class="rounded-2xl border-2 border-indigo-200 bg-indigo-50/50 p-5 sm:p-6 shadow-sm">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-indigo-100 pb-3">
-                    <div class="flex items-center gap-2.5">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white font-black text-sm">🏭</span>
-                        <div>
-                            <h2 class="text-lg font-bold text-indigo-950">Monitoring Mesin Sedang Berjalan di Pabrik</h2>
-                            <p class="text-xs sm:text-sm text-indigo-800">Daftar seluruh mesin yang sedang aktif beroperasi saat ini.</p>
-                        </div>
-                    </div>
-                    <span class="inline-flex items-center self-start sm:self-auto px-3 py-1 rounded-full text-xs font-bold"
-                        :class="availableSessions.length > 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-200 text-slate-700'">
-                        <span class="inline-block h-2 w-2 rounded-full mr-1.5" :class="availableSessions.length > 0 ? 'bg-emerald-600 animate-ping' : 'bg-slate-500'"></span>
-                        <span x-text="availableSessions.length > 0 ? availableSessions.length + ' Mesin Aktif' : '0 Mesin Aktif'"></span>
-                    </span>
-                </div>
-
-                <!-- Jika tidak ada mesin berjalan -->
-                <div x-show="availableSessions.length === 0" class="py-5 text-center text-slate-500 text-sm font-medium">
-                    Belum ada mesin yang sedang berjalan di pabrik saat ini. Silakan mulai sesi produksi baru di bawah.
-                </div>
-
-                <!-- Daftar mesin berjalan -->
-                <ul x-show="availableSessions.length > 0" class="mt-4 space-y-3" role="list">
-                    <template x-for="item in availableSessions" :key="item.id">
-                        <li class="rounded-xl border bg-white p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all"
-                            :class="item.status === 'running' ? 'border-emerald-300 hover:border-emerald-400' : 'border-red-300 hover:border-red-400'">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
-                                        :class="item.status === 'running' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'">
-                                        <span class="inline-block h-1.5 w-1.5 rounded-full mr-1" :class="item.status === 'running' ? 'bg-emerald-600' : 'bg-red-600'"></span>
-                                        <span x-text="item.status === 'running' ? 'BERJALAN' : 'DOWNTIME'"></span>
-                                    </span>
-                                    <span class="text-xs font-semibold text-slate-500" x-text="item.area.name"></span>
-                                </div>
-                                <h3 class="mt-1 text-lg font-bold text-slate-900" x-text="item.machine.name"></h3>
-                                <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
-                                    Operator: <strong class="text-slate-800" x-text="item.operatorName"></strong> |
-                                    Produk: <strong class="text-slate-800" x-text="item.product.name"></strong> |
-                                    Batch: <strong class="text-slate-800" x-text="item.batchNumber || '-'"></strong> |
-                                    Mulai: <span class="font-mono font-medium" x-text="item.startTime ? new Date(item.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'"></span>
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                @click="takeover(item.id)"
-                                :disabled="busy || cooldown"
-                                class="min-h-[46px] shrink-0 rounded-xl bg-indigo-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:ring-offset-2 disabled:opacity-50 transition-colors"
-                            >
-                                Lanjutkan Sesi di Tablet Ini
-                            </button>
-                        </li>
-                    </template>
-                </ul>
-            </div>
-
+        <section x-show="state === 'ready'" aria-labelledby="start-title">
             <!-- Form Mulai Sesi Produksi -->
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
                 <div class="border-b border-slate-100 pb-4">
-                    <h2 id="start-title" class="text-xl sm:text-2xl font-black text-slate-900">Mulai Sesi Produksi</h2>
-                    <p class="mt-1 text-sm text-slate-600">Pilih area operasional, lalu tentukan operator, produk, dan mesin yang akan dijalankan.</p>
+                    <h2 id="start-title" class="text-xl font-bold text-slate-950 sm:text-2xl">Mulai Sesi Produksi</h2>
                 </div>
 
                 <form class="mt-6 grid gap-5 sm:grid-cols-2" @submit.prevent="start">
                     <!-- Area Operasional -->
                     <div>
                         <label for="area_id" class="block text-sm font-bold text-slate-800">Area Operasional <span class="text-red-600">*</span></label>
-                        <select id="area_id" x-model="areaId" @change="changeArea" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 focus:border-indigo-600 focus:ring-indigo-600">
+                        <select id="area_id" x-model="areaId" @change="changeArea" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]">
                             <option value="">-- Pilih Area Operasional --</option>
                             @foreach ($areas as $area)
                                 <option value="{{ $area->id }}">{{ $area->area_name }}</option>
@@ -116,14 +52,13 @@
                     <!-- Nama Operator -->
                     <div>
                         <label for="operator_name" class="block text-sm font-bold text-slate-800">Nama Operator <span class="text-red-600">*</span></label>
-                        <input id="operator_name" x-model.trim="operatorName" type="text" maxlength="100" autocomplete="name" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-indigo-600 focus:ring-indigo-600" placeholder="Ketik nama petugas aktual">
+                        <input id="operator_name" x-model.trim="operatorName" type="text" maxlength="100" autocomplete="name" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]" placeholder="Nama operator">
                     </div>
 
                     <!-- Nama Produk (Ketik & Dropdown) -->
                     <div class="relative" @click.outside="productMenuOpen = false">
                         <label for="product_name" class="block text-sm font-bold text-slate-800">
                             Nama Produk <span class="text-red-600">*</span>
-                            <span class="text-xs font-normal text-slate-500">(Bisa diketik atau pilih dari list)</span>
                         </label>
                         <div class="mt-2 relative">
                             <input
@@ -136,7 +71,7 @@
                                 autocomplete="off"
                                 required
                                 :disabled="!areaId"
-                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-indigo-600 focus:ring-indigo-600 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
+                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9] disabled:cursor-not-allowed disabled:bg-slate-100"
                                 :placeholder="areaId ? 'Ketik atau klik untuk pilih produk...' : 'Pilih Area terlebih dahulu'"
                             >
                             <button
@@ -147,7 +82,7 @@
                                 tabindex="-1"
                                 aria-label="Buka daftar produk"
                             >
-                                <svg class="h-5 w-5 transition-transform duration-200" :class="productMenuOpen ? 'rotate-180 text-indigo-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="h-5 w-5 transition-transform duration-200" :class="productMenuOpen ? 'rotate-180 text-[#005cb9]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
 
@@ -161,10 +96,10 @@
                                 <button
                                     type="button"
                                     @click="selectProduct(prod)"
-                                    class="w-full rounded-lg px-4 py-3 text-left text-base font-semibold text-slate-800 hover:bg-indigo-50 hover:text-indigo-900 flex items-center justify-between border-b border-slate-100 last:border-0"
+                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-[#005cb9]"
                                 >
                                     <span x-text="prod.name"></span>
-                                    <span x-show="productId === prod.id" class="text-indigo-600 font-bold">✓</span>
+                                    <span x-show="productId === prod.id" class="font-bold text-[#005cb9]">✓</span>
                                 </button>
                             </template>
                             <div x-show="filteredProducts.length === 0" class="px-4 py-3 text-sm text-slate-500 text-center">
@@ -183,7 +118,7 @@
 
                         <div class="mt-5">
                             <label for="batch_number" class="block text-sm font-bold text-slate-800">Nomor Batch <span class="text-red-600">*</span></label>
-                            <input id="batch_number" x-model.trim="batchNumber" type="text" maxlength="255" autocomplete="off" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-indigo-600 focus:ring-indigo-600" placeholder="Ketik nomor batch produksi">
+                            <input id="batch_number" x-model.trim="batchNumber" type="text" maxlength="255" autocomplete="off" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]" placeholder="Nomor batch">
                         </div>
                     </div>
 
@@ -191,7 +126,6 @@
                     <div class="relative" @click.outside="machineMenuOpen = false">
                         <label for="machine_name" class="block text-sm font-bold text-slate-800">
                             Mesin <span class="text-red-600">*</span>
-                            <span class="text-xs font-normal text-slate-500">(Bisa diketik atau pilih dari list)</span>
                         </label>
                         <div class="mt-2 relative">
                             <input
@@ -204,7 +138,7 @@
                                 autocomplete="off"
                                 required
                                 :disabled="!areaId"
-                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-indigo-600 focus:ring-indigo-600 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
+                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9] disabled:cursor-not-allowed disabled:bg-slate-100"
                                 :placeholder="areaId ? 'Ketik atau klik untuk pilih mesin...' : 'Pilih Area terlebih dahulu'"
                             >
                             <button
@@ -215,7 +149,7 @@
                                 tabindex="-1"
                                 aria-label="Buka daftar mesin"
                             >
-                                <svg class="h-5 w-5 transition-transform duration-200" :class="machineMenuOpen ? 'rotate-180 text-indigo-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="h-5 w-5 transition-transform duration-200" :class="machineMenuOpen ? 'rotate-180 text-[#005cb9]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
 
@@ -229,10 +163,10 @@
                                 <button
                                     type="button"
                                     @click="selectMachine(mch)"
-                                    class="w-full rounded-lg px-4 py-3 text-left text-base font-semibold text-slate-800 hover:bg-indigo-50 hover:text-indigo-900 flex items-center justify-between border-b border-slate-100 last:border-0"
+                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-[#005cb9]"
                                 >
                                     <span x-text="mch.name"></span>
-                                    <span x-show="machineId === mch.id" class="text-indigo-600 font-bold">✓</span>
+                                    <span x-show="machineId === mch.id" class="font-bold text-[#005cb9]">✓</span>
                                 </button>
                             </template>
                             <div x-show="filteredMachines.length === 0" class="px-4 py-3 text-sm text-slate-500 text-center">
@@ -252,8 +186,8 @@
 
                     <!-- Tombol Start Produksi -->
                     <div class="sm:col-span-2 pt-2">
-                        <button type="submit" :disabled="busy" class="min-h-[56px] w-full rounded-xl bg-indigo-700 px-6 py-3.5 text-base sm:text-lg font-bold text-white shadow-md hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 transition-all flex items-center justify-center gap-2">
-                            <span x-show="!busy">▶ Start Produksi</span>
+                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-[#005cb9] px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-[#004c99] focus:outline-none focus:ring-2 focus:ring-[#005cb9] focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 sm:text-lg">
+                            <span x-show="!busy">Mulai Produksi</span>
                             <span x-show="busy">Memulai Sesi...</span>
                         </button>
                     </div>
@@ -300,7 +234,7 @@
                                     'bg-slate-500': state === 'completed'
                                 }"
                             ></span>
-                            <span x-text="state === 'downtime' ? '🛑 MESIN BERHENTI (DOWNTIME)' : state === 'completed' ? '✓ PRODUKSI SELESAI' : '● MESIN BERJALAN'"></span>
+                            <span x-text="state === 'downtime' ? 'MESIN BERHENTI (DOWNTIME)' : state === 'completed' ? 'PRODUKSI SELESAI' : 'MESIN BERJALAN'"></span>
                         </div>
 
                         <!-- Nama Mesin Besar -->
@@ -356,32 +290,10 @@
                     </div>
                 </div>
 
-                <section aria-labelledby="oee-preview-title" class="mt-5 border-y border-slate-200">
-                    <div class="flex items-end justify-between gap-4 py-3">
-                        <h3 id="oee-preview-title" class="text-sm font-bold uppercase tracking-wider text-slate-500">OEE Mesin</h3>
-                        <p class="font-mono text-3xl font-black leading-none tabular-nums text-indigo-700">78.8%</p>
-                    </div>
-
-                    <dl class="grid grid-cols-3 divide-x divide-slate-200 border-t border-slate-200">
-                        <div class="py-3 pr-3">
-                            <dt class="text-[11px] font-bold text-slate-500 sm:text-xs">Availability</dt>
-                            <dd class="mt-1 font-mono text-xl font-extrabold tabular-nums text-slate-900">92.0%</dd>
-                        </div>
-                        <div class="px-3 py-3">
-                            <dt class="text-[11px] font-bold text-slate-500 sm:text-xs">Performance</dt>
-                            <dd class="mt-1 font-mono text-xl font-extrabold tabular-nums text-slate-900">87.4%</dd>
-                        </div>
-                        <div class="py-3 pl-3">
-                            <dt class="text-[11px] font-bold text-slate-500 sm:text-xs">Quality</dt>
-                            <dd class="mt-1 font-mono text-xl font-extrabold tabular-nums text-slate-900">98.0%</dd>
-                        </div>
-                    </dl>
-                </section>
-
                 <!-- Tombol Kendali Saat Mesin Berjalan -->
                 <div x-show="state === 'running' && isController" class="mt-6 flex flex-col sm:flex-row gap-4" :class="{ 'pointer-events-none opacity-50': cooldown || busy }">
                     <button type="button" @click="stop" :disabled="busy || cooldown" class="min-h-[58px] flex-1 rounded-xl bg-red-700 px-6 py-3.5 text-base sm:text-lg font-bold tracking-wider text-white shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                        <span>🛑 STOP MESIN</span>
+                        <span>STOP MESIN</span>
                     </button>
                     <button type="button" @click="askFinish" :disabled="busy || cooldown" class="min-h-[58px] sm:w-56 rounded-xl border-2 border-slate-300 bg-white px-6 py-3.5 text-base font-bold text-slate-700 shadow-sm hover:bg-slate-100 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                         <span>Selesai Produksi</span>
@@ -402,7 +314,7 @@
                             @click="openDowntimeForm"
                             class="min-h-[52px] shrink-0 rounded-xl bg-red-700 px-7 py-3 text-base font-bold text-white shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 transition-all"
                         >
-                            🔧 Selesai Downtime
+                            Selesai Downtime
                         </button>
                     </div>
 
@@ -410,7 +322,6 @@
                     <div x-show="isController && showDowntimeForm" class="rounded-2xl border-2 border-red-400 bg-white p-5 sm:p-7 shadow-lg">
                         <div class="border-b border-red-100 pb-4">
                             <div class="flex items-center gap-2">
-                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-700 font-bold">📝</span>
                                 <h3 class="text-lg sm:text-xl font-bold text-slate-900">Form Pencatatan Kendala & Perbaikan</h3>
                             </div>
                             <p class="mt-1 text-sm text-slate-600">Lengkapi data berikut sebelum menyalakan mesin kembali.</p>
@@ -470,7 +381,7 @@
                                     Batal / Tutup
                                 </button>
                                 <button type="submit" :disabled="busy" class="min-h-[54px] rounded-xl bg-emerald-700 px-8 py-3.5 text-base sm:text-lg font-bold text-white shadow-md hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2 disabled:opacity-60 transition-all flex items-center justify-center gap-2">
-                                    <span x-show="!busy">▶ Mulai Mesin</span>
+                                    <span x-show="!busy">Mulai Mesin</span>
                                     <span x-show="busy">Memulai Mesin...</span>
                                 </button>
                             </div>
@@ -517,53 +428,6 @@
                 </div>
             </div>
 
-            <!-- Monitoring Mesin Pabrik Lainnya (Untuk Operator saat mengontrol mesin) -->
-            <div x-cloak class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex items-center justify-between cursor-pointer select-none" @click="showOtherSessions = !showOtherSessions">
-                    <div class="flex items-center gap-2.5">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-black text-sm">🏭</span>
-                        <div>
-                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                                <span>Monitoring Mesin Pabrik Lainnya</span>
-                                <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-800" x-text="otherSessions.length + ' Aktif'"></span>
-                            </h3>
-                            <p class="text-xs text-slate-500">Pantau mesin-mesin lain yang sedang beroperasi di pabrik secara live.</p>
-                        </div>
-                    </div>
-                    <button type="button" class="text-xs font-bold text-indigo-700 hover:text-indigo-900 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center gap-1.5 transition-colors">
-                        <span x-text="showOtherSessions ? 'Tutup Pantauan' : 'Lihat Mesin Lain'"></span>
-                        <svg class="h-4 w-4 transition-transform duration-200" :class="showOtherSessions ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                </div>
-
-                <div x-show="showOtherSessions" x-cloak class="mt-4 border-t border-slate-100 pt-4">
-                    <div x-show="otherSessions.length === 0" class="py-4 text-center text-slate-500 text-xs sm:text-sm">
-                        Tidak ada mesin lain yang sedang beroperasi saat ini.
-                    </div>
-                    <div x-show="otherSessions.length > 0" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        <template x-for="item in otherSessions" :key="item.id">
-                            <div class="rounded-xl border p-3.5 shadow-xs"
-                                :class="item.status === 'running' ? 'border-emerald-200 bg-emerald-50/40' : 'border-red-200 bg-red-50/40'">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold uppercase text-slate-500" x-text="item.area.name"></span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase"
-                                        :class="item.status === 'running' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'">
-                                        <span class="h-1.5 w-1.5 rounded-full mr-1" :class="item.status === 'running' ? 'bg-emerald-600' : 'bg-red-600'"></span>
-                                        <span x-text="item.status === 'running' ? 'RUNNING' : 'DOWNTIME'"></span>
-                                    </span>
-                                </div>
-                                <h4 class="mt-1 text-base font-bold text-slate-900" x-text="item.machine.name"></h4>
-                                <div class="mt-2 text-xs text-slate-600 space-y-0.5">
-                                    <p>Operator: <strong class="text-slate-800" x-text="item.operatorName"></strong></p>
-                                    <p>Produk: <span class="text-slate-800 font-medium" x-text="item.product.name"></span></p>
-                                    <p>Batch: <span class="text-slate-800 font-medium" x-text="item.batchNumber || '-'"></span></p>
-                                    <p>Waktu Berjalan: <span class="font-mono font-bold text-slate-900" x-text="formatSessionDuration(item.startTime)"></span></p>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- Dialog Konfirmasi In-Page Tablet-Friendly -->

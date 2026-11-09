@@ -27,17 +27,10 @@ class ProductionController extends Controller
         $categories = DowntimeCategory::all();
         $personnels = Personnel::all();
         $areas = Area::with(['activeProducts', 'activeMachines'])->get();
-        $availableSessions = ProductionSession::with(['machine.area', 'product'])
-            ->active()
-            ->oldest('start_time')
-            ->get();
         $dashboardState = [
             'data' => $controlledSession ? $this->sessionPayload($controlledSession) : null,
             'isController' => $controlledSession !== null,
             'serverNow' => now('Asia/Jakarta')->toIso8601String(),
-            'availableSessions' => $availableSessions->map(
-                fn (ProductionSession $session) => $this->sessionPayload($session)
-            ),
         ];
         $areaOptions = $areas->map(fn (Area $area) => [
             'id' => $area->id,
@@ -140,11 +133,6 @@ class ProductionController extends Controller
                 && $session->controller_token_hash !== null
                 && hash_equals($session->controller_token_hash, $controllerHash),
             'serverNow' => now('Asia/Jakarta')->toIso8601String(),
-            'availableSessions' => ProductionSession::with(['machine.area', 'product'])
-                ->active()
-                ->oldest('start_time')
-                ->get()
-                ->map(fn (ProductionSession $activeSession) => $this->sessionPayload($activeSession)),
         ]);
     }
 
@@ -288,7 +276,6 @@ class ProductionController extends Controller
             'data' => null,
             'isController' => false,
             'serverNow' => now('Asia/Jakarta')->toIso8601String(),
-            'availableSessions' => $this->availableSessionsPayload(),
         ]);
     }
 
@@ -316,16 +303,6 @@ class ProductionController extends Controller
             'isController' => true,
             'serverNow' => now('Asia/Jakarta')->toIso8601String(),
         ]);
-    }
-
-    private function availableSessionsPayload(): array
-    {
-        return ProductionSession::with(['machine.area', 'product', 'downtimeLogs'])
-            ->active()
-            ->oldest('start_time')
-            ->get()
-            ->map(fn (ProductionSession $session) => $this->sessionPayload($session))
-            ->all();
     }
 
     private function sessionPayload(ProductionSession $session): array

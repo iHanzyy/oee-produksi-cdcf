@@ -73,7 +73,7 @@ class LiveMonitoringTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_operator_dashboard_displays_all_running_machines(): void
+    public function test_operator_dashboard_does_not_expose_other_running_machines(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
         $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
@@ -93,8 +93,12 @@ class LiveMonitoringTest extends TestCase
         $this->actingAs($operator)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Monitoring Mesin Sedang Berjalan di Pabrik')
-            ->assertSee('Mixing')
-            ->assertSee('Budi Santoso');
+            ->assertDontSee('Monitoring Mesin Sedang Berjalan di Pabrik')
+            ->assertDontSee('Monitoring Mesin Pabrik Lainnya')
+            ->assertDontSee('Budi Santoso');
+
+        $this->getJson(route('production.status'))
+            ->assertOk()
+            ->assertJsonMissingPath('availableSessions');
     }
 }
