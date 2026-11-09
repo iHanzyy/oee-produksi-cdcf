@@ -4,8 +4,8 @@
             <div class="flex items-center gap-4 sm:gap-8">
                 <!-- Logo Aplikasi Pabrik -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ auth()->user()->role === 'operator' ? route('dashboard') : route('history.index') }}" class="block h-12 w-36 overflow-hidden" aria-label="OEE Produksi">
-                        <img src="{{ asset('brand/logo-oee.png') }}" alt="" class="w-36 -translate-y-4">
+                    <a href="{{ auth()->user()->role === 'operator' ? route('dashboard') : route('history.index') }}" class="block h-12 w-32 overflow-hidden sm:w-36" aria-label="OEE Produksi">
+                        <img src="{{ asset('brand/logo-oee.png') }}" alt="" class="w-32 -translate-y-3.5 sm:w-36 sm:-translate-y-4">
                     </a>
                 </div>
 
@@ -26,7 +26,7 @@
             <!-- User Info & Logout Button - Always visible & comfortable for tablet touch -->
             <div class="flex items-center gap-2 sm:gap-3">
                 <span class="hidden items-center rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 sm:inline-flex">
-                    <span class="mr-1.5 font-bold uppercase text-[#005cb9]">{{ auth()->user()->role ?? 'Operator' }}</span>
+                    <span class="mr-1.5 font-bold uppercase text-brand-700">{{ auth()->user()->role ?? 'Operator' }}</span>
                     <span>| {{ Auth::user()->name }}</span>
                 </span>
                 

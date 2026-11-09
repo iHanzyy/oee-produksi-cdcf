@@ -8,7 +8,7 @@
     >
         <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <p class="text-sm font-semibold text-[#005cb9]">Panel Supervisor &amp; Manager</p>
+                <p class="text-sm font-semibold text-brand-700">Panel Supervisor &amp; Manager</p>
                 <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Pemantauan &amp; Riwayat Produksi</h1>
             </div>
 
@@ -28,8 +28,8 @@
             <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-2.5">
                     <h2 id="live-monitoring-title" class="text-lg font-bold tracking-tight text-slate-950 sm:text-xl">Monitoring Mesin Aktif (Live)</h2>
-                    <span class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-bold text-[#005cb9]">
-                        <span class="h-2 w-2 rounded-full bg-[#01c5f0]"></span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-bold text-brand-700">
+                        <span class="h-2 w-2 rounded-full bg-brand-400"></span>
                         Live
                     </span>
                 </div>
@@ -69,7 +69,7 @@
                                 <span class="h-2 w-2 rounded-full" :class="item.status === 'running' ? 'bg-emerald-600' : 'bg-red-600 animate-pulse'"></span>
                                 <span x-text="item.status === 'running' ? 'BERJALAN' : 'DOWNTIME'"></span>
                             </span>
-                            <span class="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-[#005cb9]" x-text="item.area"></span>
+                            <span class="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-brand-700" x-text="item.area"></span>
                         </div>
 
                         <h3 class="mt-3 text-lg font-bold tracking-tight text-slate-950" x-text="item.machine"></h3>
@@ -114,15 +114,15 @@
             <form action="{{ route('history.index') }}" method="GET" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
                 <div>
                     <label for="start_date" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Dari Tanggal</label>
-                    <input id="start_date" type="date" name="start_date" value="{{ request('start_date') }}" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]">
+                    <input id="start_date" type="date" name="start_date" value="{{ request('start_date') }}" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
                 </div>
                 <div>
                     <label for="end_date" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Sampai Tanggal</label>
-                    <input id="end_date" type="date" name="end_date" value="{{ request('end_date') }}" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]">
+                    <input id="end_date" type="date" name="end_date" value="{{ request('end_date') }}" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
                 </div>
                 <div>
                     <label for="area_id" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Area Produksi</label>
-                    <select id="area_id" name="area_id" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]">
+                    <select id="area_id" name="area_id" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
                         <option value="">-- Semua Area --</option>
                         @foreach($areas as $area)
                             <option value="{{ $area->id }}" {{ request('area_id') == $area->id ? 'selected' : '' }}>{{ $area->area_name }}</option>
@@ -131,7 +131,7 @@
                 </div>
                 <div>
                     <label for="machine_id" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Pilih Mesin</label>
-                    <select id="machine_id" name="machine_id" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]">
+                    <select id="machine_id" name="machine_id" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
                         <option value="">-- Semua Mesin --</option>
                         @foreach($machines as $machine)
                             <option value="{{ $machine->id }}" {{ request('machine_id') == $machine->id ? 'selected' : '' }}>{{ $machine->machine_name }}</option>
@@ -139,7 +139,7 @@
                     </select>
                 </div>
                 <div class="flex gap-2 sm:col-span-2 lg:col-span-1">
-                    <button type="submit" class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#005cb9] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#004a94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#005cb9] focus-visible:ring-offset-2">
+                    <button type="submit" class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2">
                         <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 17l-3.8-3.8m1.3-4.2a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z" />
                         </svg>
@@ -159,7 +159,7 @@
         <section class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="oee-history-title">
             <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 id="oee-history-title" class="text-base font-bold text-slate-950">Riwayat Produksi/OEE</h2>
-                <span class="rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-bold text-[#005cb9] tabular-nums">{{ $completedSessions->total() }} Sesi</span>
+                <span class="rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-bold text-brand-700 tabular-nums">{{ $completedSessions->total() }} Sesi</span>
             </div>
 
             <div class="overflow-x-auto">
@@ -187,7 +187,7 @@
                             <td class="whitespace-nowrap px-5 py-4 sm:px-6">
                                 <div class="text-sm font-bold text-slate-900">{{ $session->machine?->machine_name ?? '-' }}</div>
                                 <div class="mt-0.5 text-xs font-medium text-slate-500">{{ $session->machine?->area?->area_name ?? '-' }} · {{ $session->product?->product_name ?? '-' }}</div>
-                                <div class="mt-1 text-xs font-semibold text-[#005cb9]">Batch: {{ $session->batch_number ?? '-' }} · Operator: {{ $session->operator_name ?? '-' }}</div>
+                                <div class="mt-1 text-xs font-semibold text-brand-700">Batch: {{ $session->batch_number ?? '-' }} · Operator: {{ $session->operator_name ?? '-' }}</div>
                             </td>
                             <td class="whitespace-nowrap px-5 py-4 text-right text-sm font-semibold text-slate-800 sm:px-6 tabular-nums">
                                 {{ $session->actual_output_kg !== null ? rtrim(rtrim(number_format((float) $session->actual_output_kg, 3, ',', '.'), '0'), ',') . ' kg' : '-' }}
@@ -254,7 +254,7 @@
                             <td class="whitespace-nowrap px-5 py-4 sm:px-6">
                                 <div class="text-sm font-bold text-slate-900">{{ optional(optional($log->productionSession)->machine)->machine_name ?? '-' }}</div>
                                 <div class="mt-0.5 text-xs font-medium text-slate-500">{{ optional(optional($log->productionSession)->machine)->area->area_name ?? '-' }}</div>
-                                <div class="mt-1 text-xs font-semibold text-[#005cb9]">Nomor Batch: {{ optional($log->productionSession)->batch_number ?? '-' }}</div>
+                                <div class="mt-1 text-xs font-semibold text-brand-700">Nomor Batch: {{ optional($log->productionSession)->batch_number ?? '-' }}</div>
                             </td>
                             <td class="px-5 py-4 sm:px-6">
                                 <span class="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">

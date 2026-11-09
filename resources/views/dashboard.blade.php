@@ -14,7 +14,7 @@
         class="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8"
     >
         <header class="mb-6">
-            <p class="text-sm font-semibold text-[#005cb9]">Stasiun Produksi</p>
+            <p class="text-sm font-semibold text-brand-700">Stasiun Produksi</p>
             <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Kontrol Mesin</h1>
         </header>
 
@@ -41,7 +41,7 @@
                     <!-- Area Operasional -->
                     <div>
                         <label for="area_id" class="block text-sm font-bold text-slate-800">Area Operasional <span class="text-red-600">*</span></label>
-                        <select id="area_id" x-model="areaId" @change="changeArea" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]">
+                        <select id="area_id" x-model="areaId" @change="changeArea" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 focus:border-brand-700 focus:ring-brand-700">
                             <option value="">-- Pilih Area Operasional --</option>
                             @foreach ($areas as $area)
                                 <option value="{{ $area->id }}">{{ $area->area_name }}</option>
@@ -52,7 +52,7 @@
                     <!-- Nama Operator -->
                     <div>
                         <label for="operator_name" class="block text-sm font-bold text-slate-800">Nama Operator <span class="text-red-600">*</span></label>
-                        <input id="operator_name" x-model.trim="operatorName" type="text" maxlength="100" autocomplete="name" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]" placeholder="Nama operator">
+                        <input id="operator_name" x-model.trim="operatorName" type="text" maxlength="100" autocomplete="name" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700" placeholder="Nama operator">
                     </div>
 
                     <!-- Nama Produk (Ketik & Dropdown) -->
@@ -71,7 +71,7 @@
                                 autocomplete="off"
                                 required
                                 :disabled="!areaId"
-                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9] disabled:cursor-not-allowed disabled:bg-slate-100"
+                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700 disabled:cursor-not-allowed disabled:bg-slate-100"
                                 :placeholder="areaId ? 'Ketik atau klik untuk pilih produk...' : 'Pilih Area terlebih dahulu'"
                             >
                             <button
@@ -82,7 +82,7 @@
                                 tabindex="-1"
                                 aria-label="Buka daftar produk"
                             >
-                                <svg class="h-5 w-5 transition-transform duration-200" :class="productMenuOpen ? 'rotate-180 text-[#005cb9]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="h-5 w-5 transition-transform duration-200" :class="productMenuOpen ? 'rotate-180 text-brand-700' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
 
@@ -96,10 +96,10 @@
                                 <button
                                     type="button"
                                     @click="selectProduct(prod)"
-                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-[#005cb9]"
+                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-brand-700"
                                 >
                                     <span x-text="prod.name"></span>
-                                    <span x-show="productId === prod.id" class="font-bold text-[#005cb9]">✓</span>
+                                    <span x-show="productId === prod.id" class="font-bold text-brand-700">✓</span>
                                 </button>
                             </template>
                             <div x-show="filteredProducts.length === 0" class="px-4 py-3 text-sm text-slate-500 text-center">
@@ -118,7 +118,7 @@
 
                         <div class="mt-5">
                             <label for="batch_number" class="block text-sm font-bold text-slate-800">Nomor Batch <span class="text-red-600">*</span></label>
-                            <input id="batch_number" x-model.trim="batchNumber" type="text" maxlength="255" autocomplete="off" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9]" placeholder="Nomor batch">
+                            <input id="batch_number" x-model.trim="batchNumber" type="text" maxlength="255" autocomplete="off" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700" placeholder="Nomor batch">
                         </div>
                     </div>
 
@@ -138,7 +138,7 @@
                                 autocomplete="off"
                                 required
                                 :disabled="!areaId"
-                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-[#005cb9] focus:ring-[#005cb9] disabled:cursor-not-allowed disabled:bg-slate-100"
+                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700 disabled:cursor-not-allowed disabled:bg-slate-100"
                                 :placeholder="areaId ? 'Ketik atau klik untuk pilih mesin...' : 'Pilih Area terlebih dahulu'"
                             >
                             <button
@@ -149,7 +149,7 @@
                                 tabindex="-1"
                                 aria-label="Buka daftar mesin"
                             >
-                                <svg class="h-5 w-5 transition-transform duration-200" :class="machineMenuOpen ? 'rotate-180 text-[#005cb9]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="h-5 w-5 transition-transform duration-200" :class="machineMenuOpen ? 'rotate-180 text-brand-700' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
 
@@ -163,10 +163,10 @@
                                 <button
                                     type="button"
                                     @click="selectMachine(mch)"
-                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-[#005cb9]"
+                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-brand-700"
                                 >
                                     <span x-text="mch.name"></span>
-                                    <span x-show="machineId === mch.id" class="font-bold text-[#005cb9]">✓</span>
+                                    <span x-show="machineId === mch.id" class="font-bold text-brand-700">✓</span>
                                 </button>
                             </template>
                             <div x-show="filteredMachines.length === 0" class="px-4 py-3 text-sm text-slate-500 text-center">
@@ -186,7 +186,7 @@
 
                     <!-- Tombol Start Produksi -->
                     <div class="sm:col-span-2 pt-2">
-                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-[#005cb9] px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-[#004c99] focus:outline-none focus:ring-2 focus:ring-[#005cb9] focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 sm:text-lg">
+                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-brand-700 px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 sm:text-lg">
                             <span x-show="!busy">Mulai Produksi</span>
                             <span x-show="busy">Memulai Sesi...</span>
                         </button>
@@ -292,10 +292,16 @@
 
                 <!-- Tombol Kendali Saat Mesin Berjalan -->
                 <div x-show="state === 'running' && isController" class="mt-6 flex flex-col sm:flex-row gap-4" :class="{ 'pointer-events-none opacity-50': cooldown || busy }">
-                    <button type="button" @click="stop" :disabled="busy || cooldown" class="min-h-[58px] flex-1 rounded-xl bg-red-700 px-6 py-3.5 text-base sm:text-lg font-bold tracking-wider text-white shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                    <button type="button" @click="stop" :disabled="busy || cooldown" class="min-h-[58px] flex-1 rounded-xl bg-red-700 px-6 py-3.5 text-base sm:text-lg font-bold tracking-wider text-white shadow-md hover:bg-red-800 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="5" y="5" width="10" height="10" rx="1" />
+                        </svg>
                         <span>STOP MESIN</span>
                     </button>
-                    <button type="button" @click="askFinish" :disabled="busy || cooldown" class="min-h-[58px] sm:w-56 rounded-xl border-2 border-slate-300 bg-white px-6 py-3.5 text-base font-bold text-slate-700 shadow-sm hover:bg-slate-100 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                    <button type="button" @click="askFinish" :disabled="busy || cooldown" class="min-h-[58px] sm:w-56 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-bold text-white shadow-sm hover:bg-emerald-800 active:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                        <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 10.5l4 4L16 6.5" />
+                        </svg>
                         <span>Selesai Produksi</span>
                     </button>
                 </div>
@@ -471,7 +477,7 @@
                         min="0"
                         inputmode="decimal"
                         required
-                        class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-[#005cb9] focus:ring-[#005cb9]"
+                        class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-brand-700 focus:ring-brand-700"
                         placeholder="Contoh: 35.5"
                     >
                 </div>

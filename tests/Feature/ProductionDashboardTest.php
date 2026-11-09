@@ -27,6 +27,20 @@ class ProductionDashboardTest extends TestCase
         $this->assertStringContainsString("this.confirmAction = 'finish';", $script);
     }
 
+    public function test_running_machine_actions_use_semantic_colors_and_relevant_icons(): void
+    {
+        $view = file_get_contents(resource_path('views/dashboard.blade.php'));
+
+        $this->assertMatchesRegularExpression(
+            '/<button[^>]*@click="stop"[^>]*class="[^"]*bg-red-700[^"]*"[^>]*>\s*<svg[^>]*aria-hidden="true"[^>]*>.*?<span>STOP MESIN<\/span>/s',
+            $view,
+        );
+        $this->assertMatchesRegularExpression(
+            '/<button[^>]*@click="askFinish"[^>]*class="[^"]*bg-emerald-700[^"]*"[^>]*>\s*<svg[^>]*aria-hidden="true"[^>]*>.*?<span>Selesai Produksi<\/span>/s',
+            $view,
+        );
+    }
+
     public function test_dashboard_contains_searchable_master_inputs_without_fake_oee_metrics(): void
     {
         $this->seed(ProductionMasterSeeder::class);
