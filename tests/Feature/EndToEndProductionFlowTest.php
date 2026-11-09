@@ -41,6 +41,7 @@ class EndToEndProductionFlowTest extends TestCase
                 'product_id' => $product->id,
                 'machine_id' => $machine->id,
                 'operator_name' => 'Budi',
+                'batch_number' => 'BATCH-E2E-001',
             ])
             ->assertCreated();
 
@@ -79,6 +80,7 @@ class EndToEndProductionFlowTest extends TestCase
             ->get(route('history.index', ['area_id' => $area->id, 'machine_id' => $machine->id]))
             ->assertOk()
             ->assertSee('Mixing')
+            ->assertSee('BATCH-E2E-001')
             ->assertSee('Mengganti bearing')
             ->assertSee('Selesai');
     }

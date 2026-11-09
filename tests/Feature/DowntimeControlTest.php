@@ -135,6 +135,7 @@ class DowntimeControlTest extends TestCase
             'product_id' => $product->id,
             'machine_id' => $machine->id,
             'operator_name' => 'Budi',
+            'batch_number' => 'BATCH-DOWNTIME-001',
         ])->assertCreated();
 
         return [$operator, ProductionSession::findOrFail($response->json('data.id')), $token];

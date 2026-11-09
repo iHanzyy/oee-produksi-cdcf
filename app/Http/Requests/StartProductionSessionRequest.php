@@ -17,6 +17,7 @@ class StartProductionSessionRequest extends FormRequest
     {
         $this->merge([
             'operator_name' => trim((string) $this->input('operator_name')),
+            'batch_number' => trim((string) $this->input('batch_number')),
         ]);
     }
 
@@ -27,6 +28,7 @@ class StartProductionSessionRequest extends FormRequest
         return [
             'area_id' => ['required', 'integer', Rule::exists('areas', 'id')],
             'operator_name' => ['required', 'string', 'max:100'],
+            'batch_number' => ['required', 'string', 'max:255'],
             'product_id' => [
                 'required',
                 'integer',

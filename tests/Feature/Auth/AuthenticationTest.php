@@ -14,7 +14,13 @@ class AuthenticationTest extends TestCase
     {
         $response = $this->get('/login');
 
-        $response->assertStatus(200);
+        $response
+            ->assertStatus(200)
+            ->assertSee('OEE Produksi')
+            ->assertSee('Username')
+            ->assertSee('Password')
+            ->assertDontSee('Forgot your password?')
+            ->assertDontSee('Remember me');
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

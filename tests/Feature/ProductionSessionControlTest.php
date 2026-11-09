@@ -31,12 +31,68 @@ class ProductionSessionControlTest extends TestCase
                 'product_id' => $secondProduct->id,
                 'machine_id' => $secondMachine->id,
                 'operator_name' => 'Budi',
+                'batch_number' => 'BATCH-VALIDATION-001',
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['product_id', 'machine_id']);
 
         $this->assertDatabaseCount('production_sessions', 0);
         $this->assertTrue($firstProduct->refresh()->is_active && $firstMachine->refresh()->is_active);
+    }
+
+    public function test_start_requires_batch_number(): void
+    {
+        [$operator, $area, $product, $machine] = $this->productionFixture();
+        $token = $this->deviceToken($operator);
+
+        $this->actingAs($operator)
+            ->withCredentials()
+            ->withCookie('device_token', $token)
+            ->postJson(route('machine.start'), [
+                'area_id' => $area->id,
+                'product_id' => $product->id,
+                'machine_id' => $machine->id,
+                'operator_name' => 'Budi',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['batch_number']);
+
+        $this->assertDatabaseCount('production_sessions', 0);
+    }
+
+    public function test_start_trims_batch_number_and_returns_it_in_payload(): void
+    {
+        [$operator, $area, $product, $machine] = $this->productionFixture();
+        $token = $this->deviceToken($operator);
+
+        $response = $this->postStartSession(
+            $operator,
+            $token,
+            $area,
+            $product,
+            $machine,
+            '  BATCH-001  ',
+        )
+            ->assertCreated()
+            ->assertJsonPath('data.batchNumber', 'BATCH-001');
+
+        $this->assertDatabaseHas('production_sessions', [
+            'id' => $response->json('data.id'),
+            'batch_number' => 'BATCH-001',
+        ]);
+    }
+
+    public function test_batch_number_can_be_reused_for_different_sessions(): void
+    {
+        [$operator, $area, $product, $firstMachine] = $this->productionFixture();
+        $secondMachine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Coating Yenchen']);
+
+        $this->postStartSession($operator, $this->deviceToken($operator), $area, $product, $firstMachine, 'BATCH-SHARED')
+            ->assertCreated();
+        $this->postStartSession($operator, $this->deviceToken($operator), $area, $product, $secondMachine, 'BATCH-SHARED')
+            ->assertCreated();
+
+        $this->assertSame(2, ProductionSession::query()->where('batch_number', 'BATCH-SHARED')->count());
     }
 
     public function test_first_start_wins_when_the_same_machine_is_requested_twice(): void
@@ -210,7 +266,7 @@ class ProductionSessionControlTest extends TestCase
         return [$operator, $area, $product, $machine];
     }
 
-    private function postStartSession(User $operator, string $token, Area $area, Product $product, Machine $machine)
+    private function postStartSession(User $operator, string $token, Area $area, Product $product, Machine $machine, string $batchNumber = 'BATCH-CONTROL-001')
     {
         return $this->actingAs($operator)
             ->withCredentials()
@@ -220,6 +276,7 @@ class ProductionSessionControlTest extends TestCase
                 'product_id' => $product->id,
                 'machine_id' => $machine->id,
                 'operator_name' => 'Budi',
+                'batch_number' => $batchNumber,
             ]);
     }
 

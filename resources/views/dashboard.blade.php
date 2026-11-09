@@ -77,6 +77,7 @@
                                 <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
                                     Operator: <strong class="text-slate-800" x-text="item.operatorName"></strong> |
                                     Produk: <strong class="text-slate-800" x-text="item.product.name"></strong> |
+                                    Batch: <strong class="text-slate-800" x-text="item.batchNumber || '-'"></strong> |
                                     Mulai: <span class="font-mono font-medium" x-text="item.startTime ? new Date(item.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'"></span>
                                 </p>
                             </div>
@@ -179,6 +180,11 @@
                                 @endforeach
                             @endforeach
                         </datalist>
+
+                        <div class="mt-5">
+                            <label for="batch_number" class="block text-sm font-bold text-slate-800">Nomor Batch <span class="text-red-600">*</span></label>
+                            <input id="batch_number" x-model.trim="batchNumber" type="text" maxlength="255" autocomplete="off" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-indigo-600 focus:ring-indigo-600" placeholder="Ketik nomor batch produksi">
+                        </div>
                     </div>
 
                     <!-- Mesin (Ketik & Dropdown) -->
@@ -341,6 +347,8 @@
                     <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-200">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Nama Produk</p>
                         <p class="mt-1 text-base font-bold text-slate-900" x-text="session?.product.name"></p>
+                        <p class="mt-2 text-xs font-bold uppercase tracking-wider text-slate-500">Nomor Batch</p>
+                        <p class="mt-1 text-sm font-bold text-slate-900" x-text="session?.batchNumber || '-'"></p>
                     </div>
                     <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-200">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Waktu Mulai</p>
@@ -548,6 +556,7 @@
                                 <div class="mt-2 text-xs text-slate-600 space-y-0.5">
                                     <p>Operator: <strong class="text-slate-800" x-text="item.operatorName"></strong></p>
                                     <p>Produk: <span class="text-slate-800 font-medium" x-text="item.product.name"></span></p>
+                                    <p>Batch: <span class="text-slate-800 font-medium" x-text="item.batchNumber || '-'"></span></p>
                                     <p>Waktu Berjalan: <span class="font-mono font-bold text-slate-900" x-text="formatSessionDuration(item.startTime)"></span></p>
                                 </div>
                             </div>

@@ -78,6 +78,7 @@ class ProductionController extends Controller
             return ProductionSession::create([
                 'machine_id' => $machine->id,
                 'product_id' => $validated['product_id'],
+                'batch_number' => $validated['batch_number'],
                 'operator_id' => null,
                 'operator_name' => $validated['operator_name'],
                 'controller_token_hash' => $controllerHash,
@@ -345,6 +346,7 @@ class ProductionController extends Controller
             'id' => $session->id,
             'status' => $session->status,
             'operatorName' => $session->operator_name,
+            'batchNumber' => $session->batch_number,
             'startTime' => $session->start_time?->copy()->timezone('Asia/Jakarta')->toIso8601String(),
             'endTime' => $session->end_time?->copy()->timezone('Asia/Jakarta')->toIso8601String(),
             'area' => [

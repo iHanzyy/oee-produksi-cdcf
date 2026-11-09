@@ -91,6 +91,8 @@
                             <div class="rounded-lg bg-slate-50 p-2 border border-slate-100">
                                 <p class="text-[10px] font-bold uppercase text-slate-500">Produk</p>
                                 <p class="mt-0.5 font-bold text-slate-900 truncate" x-text="item.product"></p>
+                                <p class="mt-2 text-[10px] font-bold uppercase text-slate-500">Nomor Batch</p>
+                                <p class="mt-0.5 font-bold text-slate-900 truncate" x-text="item.batchNumber || '-'"></p>
                             </div>
                         </div>
 
@@ -196,6 +198,7 @@
                             <td class="px-6 py-5 whitespace-nowrap">
                                 <div class="text-sm font-bold text-slate-800">{{ optional(optional($log->productionSession)->machine)->machine_name ?? '-' }}</div>
                                 <div class="text-xs font-medium text-slate-500 mt-0.5">{{ optional(optional($log->productionSession)->machine)->area->area_name ?? '-' }}</div>
+                                <div class="text-xs font-semibold text-indigo-700 mt-1">Nomor Batch: {{ optional($log->productionSession)->batch_number ?? '-' }}</div>
                             </td>
                             <td class="px-6 py-5">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 mb-2 border border-red-200">

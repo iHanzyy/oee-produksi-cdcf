@@ -118,6 +118,40 @@ class HistoryReportingTest extends TestCase
         $this->assertSame([$newer->id, $older->id], $export->query()->pluck('downtime_logs.id')->all());
     }
 
+    public function test_history_and_export_include_batch_number_with_legacy_fallback(): void
+    {
+        $manager = User::factory()->create(['role' => 'manager']);
+        $area = Area::create(['area_name' => 'Tablet Hormon']);
+        $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
+        $withBatch = $this->createDowntime(
+            $machine,
+            '2026-09-24 01:00:00',
+            'completed',
+            '2026-09-24 01:05:00',
+            300,
+            'BATCH-HISTORY-001',
+        );
+        $legacy = $this->createDowntime($machine, '2026-09-24 00:50:00');
+        $this->createDowntime($machine, '2026-09-24 00:40:00', 'downtime', null, 0, 'BATCH-ACTIVE-001');
+
+        $this->actingAs($manager)
+            ->get(route('history.index'))
+            ->assertOk()
+            ->assertSee('Nomor Batch')
+            ->assertSee('BATCH-HISTORY-001');
+
+        $this->actingAs($manager)
+            ->getJson(route('history.active_sessions'))
+            ->assertOk()
+            ->assertJsonPath('sessions.0.batchNumber', 'BATCH-ACTIVE-001');
+
+        $export = new DowntimeHistoryExport([]);
+
+        $this->assertSame('Nomor Batch', $export->headings()[3]);
+        $this->assertSame('BATCH-HISTORY-001', $export->map($withBatch->fresh()->load('productionSession.machine.area', 'downtimeCategory', 'personnel'))[3]);
+        $this->assertSame('-', $export->map($legacy->fresh()->load('productionSession.machine.area', 'downtimeCategory', 'personnel'))[3]);
+    }
+
     public function test_history_distinguishes_active_incomplete_and_completed_logs_in_jakarta_time(): void
     {
         $manager = User::factory()->create(['role' => 'manager']);
@@ -151,10 +185,12 @@ class HistoryReportingTest extends TestCase
         string $sessionStatus = 'completed',
         ?string $goTime = null,
         int $durationSeconds = 0,
+        ?string $batchNumber = null,
     ): DowntimeLog {
         $session = ProductionSession::create([
             'machine_id' => $machine->id,
             'operator_name' => 'Budi',
+            'batch_number' => $batchNumber,
             'start_time' => '2026-09-23 16:00:00',
             'end_time' => $sessionStatus === 'completed' ? '2026-09-24 17:00:00' : null,
             'status' => $sessionStatus,

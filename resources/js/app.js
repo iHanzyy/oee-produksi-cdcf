@@ -15,6 +15,7 @@ Alpine.data('productionControl', (config) => ({
     operatorName: '',
     productName: '',
     productId: '',
+    batchNumber: '',
     machineName: '',
     machineId: '',
     productMenuOpen: false,
@@ -148,6 +149,7 @@ Alpine.data('productionControl', (config) => ({
             area_id: Number(this.areaId),
             operator_name: this.operatorName,
             product_id: this.productId,
+            batch_number: this.batchNumber,
             machine_id: this.machineId,
         });
 
@@ -301,6 +303,7 @@ Alpine.data('productionControl', (config) => ({
             this.cancelConfirm();
             this.areaId = '';
             this.operatorName = '';
+            this.batchNumber = '';
             this.changeArea();
         }
     },

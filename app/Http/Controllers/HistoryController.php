@@ -58,6 +58,7 @@ class HistoryController extends Controller
             'id' => $session->id,
             'status' => $session->status,
             'operatorName' => $session->operator_name,
+            'batchNumber' => $session->batch_number,
             'startTime' => $session->start_time?->copy()->timezone('Asia/Jakarta')->toIso8601String(),
             'area' => $session->machine->area->area_name,
             'product' => $session->product?->product_name ?? 'Produk',

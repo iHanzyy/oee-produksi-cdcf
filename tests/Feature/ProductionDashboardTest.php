@@ -37,6 +37,11 @@ class ProductionDashboardTest extends TestCase
         $response->assertOk()
             ->assertSee('Mulai Sesi Produksi')
             ->assertSee('Nama Operator')
+            ->assertSee('Nomor Batch')
+            ->assertSee('id="batch_number"', false)
+            ->assertSee('x-model.trim="batchNumber"', false)
+            ->assertSee('x-text="item.batchNumber || \'-\'"', false)
+            ->assertSee('x-text="session?.batchNumber || \'-\'"', false)
             ->assertSee('product-options')
             ->assertSee('machine-options')
             ->assertSee('Novasteron')
@@ -68,6 +73,7 @@ class ProductionDashboardTest extends TestCase
             'machine_id' => $machine->id,
             'product_id' => $product->id,
             'operator_name' => 'Siti',
+            'batch_number' => 'BATCH-DASH-001',
             'controller_token_hash' => hash('sha256', 'other-browser'),
             'start_time' => now(),
             'status' => 'running',
@@ -78,7 +84,8 @@ class ProductionDashboardTest extends TestCase
             ->assertOk()
             ->assertSee('Lanjutkan Sesi')
             ->assertSee('Mixing')
-            ->assertSee('Siti');
+            ->assertSee('Siti')
+            ->assertSee('BATCH-DASH-001');
     }
 
     public function test_dashboard_displays_downtime_state_and_form_options_for_active_session(): void
@@ -100,6 +107,7 @@ class ProductionDashboardTest extends TestCase
             'machine_id' => $machine->id,
             'product_id' => $product->id,
             'operator_name' => 'Ahmad',
+            'batch_number' => 'BATCH-DASH-002',
             'controller_token_hash' => $controllerHash,
             'start_time' => now()->subMinutes(15),
             'status' => 'downtime',
@@ -123,6 +131,7 @@ class ProductionDashboardTest extends TestCase
             ->assertDontSee('Jam Stop Mesin')
             ->assertSee('Stripper Indomach')
             ->assertSee('Ahmad')
+            ->assertSee('BATCH-DASH-002')
             ->assertSee('Troubleshooting Kelistrikan')
             ->assertSee('Teknisi Listrik Pabrik')
             ->assertSee('Selesai Downtime')
