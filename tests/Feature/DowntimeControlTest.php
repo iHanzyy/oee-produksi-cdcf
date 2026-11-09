@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\DowntimeCategory;
 use App\Models\DowntimeLog;
 use App\Models\Machine;
+use App\Models\OeeStandard;
 use App\Models\Personnel;
 use App\Models\Product;
 use App\Models\ProductionSession;
@@ -68,7 +69,7 @@ class DowntimeControlTest extends TestCase
         [$operator, $session, $token] = $this->runningSession();
         $this->postAsBrowser($operator, $token, route('machine.stop', $session))->assertOk();
 
-        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true])
+        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
             ->assertConflict()
             ->assertJsonPath('message', 'Selesaikan downtime terlebih dahulu.');
 
@@ -85,7 +86,7 @@ class DowntimeControlTest extends TestCase
         $this->postAsBrowser($operator, $token, route('machine.resume', $session), $this->downtimeDetails())
             ->assertOk();
 
-        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true])
+        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
             ->assertStatus(429)
             ->assertJsonPath('message', 'Mesin baru dijalankan kembali. Tunggu 3 detik sebelum menyelesaikan produksi.');
 
@@ -93,7 +94,7 @@ class DowntimeControlTest extends TestCase
         $this->assertNull($session->fresh()->end_time);
 
         Carbon::setTestNow('2026-09-24 01:05:03');
-        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true])
+        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
             ->assertOk()
             ->assertJsonPath('data.status', 'completed');
     }
@@ -107,7 +108,7 @@ class DowntimeControlTest extends TestCase
         $this->postAsBrowser($operator, $token, route('machine.resume', $session), $this->downtimeDetails())->assertOk();
         Carbon::setTestNow('2026-09-24 02:00:00');
 
-        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true])
+        $this->postAsBrowser($operator, $token, route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
             ->assertOk()
             ->assertJsonPath('data.status', 'completed')
             ->assertJsonPath('data.summary.hadDowntime', true)
@@ -129,6 +130,12 @@ class DowntimeControlTest extends TestCase
         $area = Area::create(['area_name' => 'Tablet Hormon']);
         $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
+        OeeStandard::create([
+            'product_id' => $product->id,
+            'machine_id' => $machine->id,
+            'theoretical_output_kg' => 40,
+            'ideal_cycle_time_hours_per_kg' => 0.075,
+        ]);
         $token = $this->deviceToken($operator);
         $response = $this->postAsBrowser($operator, $token, route('machine.start'), [
             'area_id' => $area->id,

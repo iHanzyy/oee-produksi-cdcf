@@ -416,9 +416,33 @@
                             <dt class="text-xs font-bold uppercase text-emerald-800">Jumlah Downtime</dt>
                             <dd class="mt-1 text-base font-bold text-slate-900" x-text="session?.summary.downtimeCount + ' kali'"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200 sm:col-span-2 lg:col-span-2">
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
                             <dt class="text-xs font-bold uppercase text-emerald-800">Total Downtime</dt>
                             <dd class="mt-1 text-base font-bold text-red-700" x-text="duration(session?.summary.totalDowntimeSeconds)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Output Aktual (kg)</dt>
+                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatOutput(session?.oee?.actualOutputKg)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Availability</dt>
+                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatPercent(session?.oee?.availabilityPercent)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Quality</dt>
+                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatPercent(session?.oee?.qualityPercent)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Performance</dt>
+                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatPercent(session?.oee?.performancePercent)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">OEE</dt>
+                            <dd class="mt-1 text-lg font-black text-emerald-900 tabular-nums" x-text="formatPercent(session?.oee?.oeePercent)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200 sm:col-span-2 lg:col-span-2">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Peringatan</dt>
+                            <dd class="mt-1 text-sm font-bold" :class="session?.oee?.warnings?.length ? 'text-amber-800' : 'text-slate-700'" x-text="session?.oee?.warnings?.length ? session.oee.warnings.join(' ') : '-'"></dd>
                         </div>
                     </dl>
 
@@ -435,11 +459,27 @@
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
                 <h3 class="text-xl font-bold text-slate-900" x-text="confirmTitle"></h3>
                 <p class="mt-2 text-base text-slate-600 leading-relaxed" x-text="confirmMessage"></p>
+                <div x-show="confirmAction === 'finish'" class="mt-4">
+                    <label for="actual_output_kg" class="block text-sm font-bold text-slate-800">
+                        Output Aktual (kg) <span class="text-red-600">*</span>
+                    </label>
+                    <input
+                        id="actual_output_kg"
+                        x-model="actualOutputKg"
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        inputmode="decimal"
+                        required
+                        class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-[#005cb9] focus:ring-[#005cb9]"
+                        placeholder="Contoh: 35.5"
+                    >
+                </div>
                 <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
                     <button type="button" @click="cancelConfirm" class="min-h-[48px] rounded-xl border border-slate-300 px-5 py-2.5 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                         Batal
                     </button>
-                    <button type="button" @click="executeConfirm" :disabled="!confirmReady || busy" class="min-h-[48px] rounded-xl bg-red-700 px-6 py-2.5 text-base font-bold text-white shadow hover:bg-red-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" x-text="confirmButtonText">
+                    <button type="button" @click="executeConfirm" :disabled="!canConfirm() || busy" class="min-h-[48px] rounded-xl bg-red-700 px-6 py-2.5 text-base font-bold text-white shadow hover:bg-red-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" x-text="confirmButtonText">
                     </button>
                 </div>
             </div>

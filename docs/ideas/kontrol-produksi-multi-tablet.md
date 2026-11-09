@@ -50,7 +50,7 @@ Produk:
 Mesin:
 
 - Cetak Gylongli 1
-- Cetak Gylonglu 2
+- Cetak Gylongli 2
 - Stripper Indomach
 - Blister DKPS 1
 - Blister DKPS 2

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Area;
 use App\Models\DowntimeCategory;
 use App\Models\Machine;
+use App\Models\OeeStandard;
 use App\Models\Personnel;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
@@ -22,7 +23,7 @@ class ProductionMasterSeeder extends Seeder
                     'Prinolas', 'Pil KB Harmonies', 'Trinordiol', 'Dienogest',
                 ],
                 'machines' => [
-                    'Cetak Gylongli 1', 'Cetak Gylonglu 2', 'Stripper Indomach', 'Blister DKPS 1',
+                    'Cetak Gylongli 1', 'Cetak Gylongli 2', 'Stripper Indomach', 'Blister DKPS 1',
                     'Blister DKPS 2', 'Mixing', 'Coating Yenchen',
                 ],
             ],
@@ -62,6 +63,56 @@ class ProductionMasterSeeder extends Seeder
                     ['area_id' => $area->id, 'machine_name' => $machineName],
                     ['is_active' => true],
                 );
+            }
+        }
+
+        foreach ([
+            [
+                'products' => ['Alyrenol', 'Pregnolin', 'Progeston', 'Prestrenol'],
+                'theoretical_output_kg' => 40,
+                'cycles' => [
+                    'Mixing' => '0.0750187547',
+                    'Stripper Indomach' => '0.1292500000',
+                    'Cetak Gylongli 1' => '0.0377073906',
+                    'Cetak Gylongli 2' => '0.0377073906',
+                ],
+            ],
+            [
+                'products' => ['Bifertil', 'Provula'],
+                'theoretical_output_kg' => 25.55,
+                'cycles' => [
+                    'Mixing' => '0.2347417840',
+                    'Stripper Indomach' => '0.1534246575',
+                    'Cetak Gylongli 1' => '0.0413231678',
+                    'Cetak Gylongli 2' => '0.0413231678',
+                ],
+            ],
+            [
+                'products' => ['Novasteron', 'Norelut', 'Meprolut', 'Luteron', 'Norethisterone Tab 5 mg', 'Etiro-N', 'Andalut'],
+                'theoretical_output_kg' => 25.235,
+                'cycles' => [
+                    'Mixing' => '0.0792393027',
+                    'Stripper Indomach' => '0.1553398058',
+                    'Cetak Gylongli 1' => '0.0418389910',
+                    'Cetak Gylongli 2' => '0.0418389910',
+                ],
+            ],
+        ] as $standardGroup) {
+            foreach ($standardGroup['products'] as $productName) {
+                $product = Product::query()->where('product_name', $productName)->firstOrFail();
+
+                foreach ($standardGroup['cycles'] as $machineName => $idealCycleTime) {
+                    $machine = Machine::query()->where('machine_name', $machineName)->firstOrFail();
+
+                    OeeStandard::updateOrCreate(
+                        ['product_id' => $product->id, 'machine_id' => $machine->id],
+                        [
+                            'theoretical_output_kg' => $standardGroup['theoretical_output_kg'],
+                            'ideal_cycle_time_hours_per_kg' => $idealCycleTime,
+                            'is_active' => true,
+                        ],
+                    );
+                }
             }
         }
 

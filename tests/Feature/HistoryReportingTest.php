@@ -6,6 +6,7 @@ use App\Exports\DowntimeHistoryExport;
 use App\Models\Area;
 use App\Models\DowntimeLog;
 use App\Models\Machine;
+use App\Models\Product;
 use App\Models\ProductionSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -177,6 +178,128 @@ class HistoryReportingTest extends TestCase
         $this->assertSame('Data tidak lengkap', $incomplete->fresh()->load('productionSession')->status_label);
         $this->assertSame('Selesai', $completed->fresh()->load('productionSession')->status_label);
         $this->assertSame('24-09-2026 07:10:00', $export->map($completed->fresh()->load('productionSession.machine.area', 'downtimeCategory', 'personnel'))[0]);
+    }
+
+    public function test_completed_session_oee_history_lists_one_row_per_session_with_filters_and_independent_pagination(): void
+    {
+        $spv = User::factory()->create(['role' => 'spv']);
+        $tabletArea = Area::create(['area_name' => 'Tablet Hormon']);
+        $packingArea = Area::create(['area_name' => 'Packing Hormon']);
+        $product = Product::create(['area_id' => $tabletArea->id, 'product_name' => 'Alyrenol']);
+        $mixing = Machine::create(['area_id' => $tabletArea->id, 'machine_name' => 'Mixing']);
+        $packingMachine = Machine::create(['area_id' => $packingArea->id, 'machine_name' => 'Mesin Packing Hormon 1']);
+
+        $noDowntime = ProductionSession::create([
+            'machine_id' => $mixing->id,
+            'product_id' => $product->id,
+            'operator_name' => 'Budi',
+            'batch_number' => 'BATCH-OEE-NODT',
+            'start_time' => '2026-09-24 01:00:00',
+            'end_time' => '2026-09-24 09:00:00',
+            'status' => 'completed',
+            'actual_output_kg' => 35,
+            'theoretical_output_kg' => 40,
+            'ideal_cycle_time_hours_per_kg' => 0.2,
+            'operating_time_seconds' => 28800,
+            'availability_percent' => 100,
+            'quality_percent' => 87.5,
+            'performance_percent' => 87.5,
+            'oee_percent' => 76.5625,
+        ]);
+
+        $multiDowntime = ProductionSession::create([
+            'machine_id' => $mixing->id,
+            'product_id' => $product->id,
+            'operator_name' => 'Siti',
+            'batch_number' => 'BATCH-OEE-WARN',
+            'start_time' => '2026-09-24 02:00:00',
+            'end_time' => '2026-09-24 10:00:00',
+            'status' => 'completed',
+            'actual_output_kg' => 50,
+            'theoretical_output_kg' => 40,
+            'ideal_cycle_time_hours_per_kg' => 0.2,
+            'operating_time_seconds' => 25200,
+            'availability_percent' => 87.5,
+            'quality_percent' => 125,
+            'performance_percent' => 142.8571,
+            'oee_percent' => 156.25,
+        ]);
+
+        DowntimeLog::create([
+            'production_session_id' => $multiDowntime->id,
+            'stop_time' => '2026-09-24 03:00:00',
+            'go_time' => '2026-09-24 03:30:00',
+            'duration_seconds' => 1800,
+        ]);
+        DowntimeLog::create([
+            'production_session_id' => $multiDowntime->id,
+            'stop_time' => '2026-09-24 05:00:00',
+            'go_time' => '2026-09-24 05:30:00',
+            'duration_seconds' => 1800,
+        ]);
+
+        $legacyNull = ProductionSession::create([
+            'machine_id' => $mixing->id,
+            'product_id' => $product->id,
+            'operator_name' => 'Rina',
+            'batch_number' => 'BATCH-OEE-LEGACY',
+            'start_time' => '2026-09-23 18:00:00',
+            'end_time' => '2026-09-23 19:00:00',
+            'status' => 'completed',
+        ]);
+
+        ProductionSession::create([
+            'machine_id' => $mixing->id,
+            'product_id' => $product->id,
+            'operator_name' => 'Running',
+            'batch_number' => 'BATCH-OEE-RUN',
+            'start_time' => '2026-09-24 11:00:00',
+            'status' => 'running',
+        ]);
+
+        ProductionSession::create([
+            'machine_id' => $packingMachine->id,
+            'product_id' => $product->id,
+            'operator_name' => 'Other Area',
+            'batch_number' => 'BATCH-OEE-PACK',
+            'start_time' => '2026-09-24 01:00:00',
+            'end_time' => '2026-09-24 09:00:00',
+            'status' => 'completed',
+        ]);
+
+        $response = $this->actingAs($spv)->get(route('history.index', [
+            'start_date' => '2026-09-24',
+            'end_date' => '2026-09-24',
+            'area_id' => $tabletArea->id,
+            'machine_id' => $mixing->id,
+        ]))->assertOk();
+
+        $response->assertViewHas('completedSessions', function (LengthAwarePaginator $sessions) use ($multiDowntime, $noDowntime, $legacyNull): bool {
+            $this->assertSame([$multiDowntime->id, $noDowntime->id, $legacyNull->id], $sessions->pluck('id')->all());
+            $this->assertSame('session_page', $sessions->getPageName());
+
+            foreach ($sessions as $session) {
+                $this->assertTrue($session->relationLoaded('machine'));
+                $this->assertTrue($session->machine->relationLoaded('area'));
+                $this->assertTrue($session->relationLoaded('product'));
+            }
+
+            return true;
+        });
+
+        $response->assertViewHas('logs', fn (LengthAwarePaginator $logs): bool => $logs->getPageName() === 'page' && $logs->total() === 2);
+
+        $response
+            ->assertSee('Riwayat Produksi/OEE')
+            ->assertSee('BATCH-OEE-NODT')
+            ->assertSee('BATCH-OEE-WARN')
+            ->assertSee('BATCH-OEE-LEGACY')
+            ->assertDontSee('BATCH-OEE-PACK')
+            ->assertSee('35 kg')
+            ->assertSee('76,56%')
+            ->assertSee('125,00%')
+            ->assertSee('156,25%')
+            ->assertSee('Quality melebihi 100%. Performance melebihi 100%. OEE melebihi 100%.');
     }
 
     private function createDowntime(

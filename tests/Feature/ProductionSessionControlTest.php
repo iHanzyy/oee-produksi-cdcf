@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Area;
 use App\Models\Machine;
+use App\Models\OeeStandard;
 use App\Models\Product;
 use App\Models\ProductionSession;
 use App\Models\User;
@@ -14,6 +15,34 @@ use Tests\TestCase;
 class ProductionSessionControlTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_start_requires_an_active_oee_standard_for_the_product_and_machine(): void
+    {
+        $operator = User::factory()->create(['role' => 'operator']);
+        $area = Area::create(['area_name' => 'Tablet Hormon']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
+
+        $this->postStartSession($operator, $this->deviceToken($operator), $area, $product, $machine)
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Standar OEE belum tersedia untuk produk dan mesin ini.');
+
+        $this->assertDatabaseCount('production_sessions', 0);
+
+        OeeStandard::create([
+            'product_id' => $product->id,
+            'machine_id' => $machine->id,
+            'theoretical_output_kg' => 40,
+            'ideal_cycle_time_hours_per_kg' => 0.075,
+            'is_active' => false,
+        ]);
+
+        $this->postStartSession($operator, $this->deviceToken($operator), $area, $product, $machine)
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Standar OEE belum tersedia untuk produk dan mesin ini.');
+
+        $this->assertDatabaseCount('production_sessions', 0);
+    }
 
     public function test_start_requires_an_active_product_and_machine_from_the_selected_area(): void
     {
@@ -86,6 +115,7 @@ class ProductionSessionControlTest extends TestCase
     {
         [$operator, $area, $product, $firstMachine] = $this->productionFixture();
         $secondMachine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Coating Yenchen']);
+        $this->createStandard($product, $secondMachine);
 
         $this->postStartSession($operator, $this->deviceToken($operator), $area, $product, $firstMachine, 'BATCH-SHARED')
             ->assertCreated();
@@ -116,6 +146,7 @@ class ProductionSessionControlTest extends TestCase
     {
         [$operator, $area, $product, $firstMachine] = $this->productionFixture();
         $secondMachine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Coating Yenchen']);
+        $this->createStandard($product, $secondMachine);
         $firstToken = $this->deviceToken($operator);
         $secondToken = $this->deviceToken($operator);
 
@@ -197,7 +228,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session), ['confirmed' => true])
+                ->postJson(route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
                 ->assertStatus(429)
                 ->assertJsonPath('message', 'Sesi baru dimulai. Tunggu 3 detik sebelum menyelesaikan produksi.');
 
@@ -209,7 +240,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session), ['confirmed' => true])
+                ->postJson(route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
                 ->assertOk()
                 ->assertJsonPath('data.status', 'completed');
         } finally {
@@ -239,7 +270,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session))
+                ->postJson(route('machine.end', $session), ['actual_output_kg' => 35])
                 ->assertStatus(422)
                 ->assertJsonPath('message', 'Konfirmasi selesai produksi tidak diterima. Muat ulang halaman lalu coba lagi.');
 
@@ -248,7 +279,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session), ['confirmed' => true])
+                ->postJson(route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
                 ->assertOk()
                 ->assertJsonPath('data.status', 'completed');
         } finally {
@@ -262,8 +293,19 @@ class ProductionSessionControlTest extends TestCase
         $area = Area::create(['area_name' => 'Tablet Hormon']);
         $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
+        $this->createStandard($product, $machine);
 
         return [$operator, $area, $product, $machine];
+    }
+
+    private function createStandard(Product $product, Machine $machine): void
+    {
+        OeeStandard::create([
+            'product_id' => $product->id,
+            'machine_id' => $machine->id,
+            'theoretical_output_kg' => 40,
+            'ideal_cycle_time_hours_per_kg' => 0.075,
+        ]);
     }
 
     private function postStartSession(User $operator, string $token, Area $area, Product $product, Machine $machine, string $batchNumber = 'BATCH-CONTROL-001')

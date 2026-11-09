@@ -18,6 +18,7 @@ class HistoryController extends Controller
     public function index(HistoryFilterRequest $request)
     {
         $filters = $request->filters();
+        $completedSessions = ProductionSession::query()->forHistory($filters)->paginate(15, ['*'], 'session_page')->withQueryString();
         $logs = DowntimeLog::query()->forHistory($filters)->paginate(15)->withQueryString();
         $areas = Area::query()->orderBy('area_name')->get();
         $machines = Machine::query()
@@ -32,7 +33,7 @@ class HistoryController extends Controller
             ->map(fn (ProductionSession $session) => $this->sessionPayload($session))
             ->values();
 
-        return view('history', compact('logs', 'areas', 'machines', 'activeSessions'));
+        return view('history', compact('completedSessions', 'logs', 'areas', 'machines', 'activeSessions'));
     }
 
     public function activeSessions(): JsonResponse

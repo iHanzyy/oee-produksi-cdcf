@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Area;
 use App\Models\DowntimeCategory;
 use App\Models\Machine;
+use App\Models\OeeStandard;
 use App\Models\Personnel;
 use App\Models\Product;
 use App\Models\User;
@@ -25,6 +26,12 @@ class EndToEndProductionFlowTest extends TestCase
         $area = Area::create(['area_name' => 'Tablet Hormon']);
         $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
+        OeeStandard::create([
+            'product_id' => $product->id,
+            'machine_id' => $machine->id,
+            'theoretical_output_kg' => 40,
+            'ideal_cycle_time_hours_per_kg' => 0.075,
+        ]);
         $category = DowntimeCategory::create(['category_name' => 'Kerusakan Mekanik']);
         $personnel = Personnel::create(['name' => 'Teknisi A', 'role' => 'Teknisi']);
         $token = $this->actingAs($operator)
@@ -65,7 +72,7 @@ class EndToEndProductionFlowTest extends TestCase
         Carbon::setTestNow('2026-09-25 09:00:03');
 
         $this->actingAs($operator)->withCredentials()->withCookie('device_token', $token)
-            ->postJson(route('machine.end', $sessionId), ['confirmed' => true])
+            ->postJson(route('machine.end', $sessionId), ['confirmed' => true, 'actual_output_kg' => 35])
             ->assertOk()
             ->assertJsonPath('data.status', 'completed')
             ->assertJsonPath('data.summary.hadDowntime', true)
@@ -79,6 +86,8 @@ class EndToEndProductionFlowTest extends TestCase
         $this->actingAs($spv)
             ->get(route('history.index', ['area_id' => $area->id, 'machine_id' => $machine->id]))
             ->assertOk()
+            ->assertSee('Riwayat Produksi/OEE')
+            ->assertSee('35 kg')
             ->assertSee('Mixing')
             ->assertSee('BATCH-E2E-001')
             ->assertSee('Mengganti bearing')

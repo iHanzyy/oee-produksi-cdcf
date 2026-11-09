@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Middleware\EnsureDeviceToken;
+use App\Http\Requests\CompleteProductionSessionRequest;
 use App\Http\Requests\ResumeProductionSessionRequest;
 use App\Http\Requests\StartProductionSessionRequest;
 use App\Models\Area;
 use App\Models\DowntimeCategory;
 use App\Models\DowntimeLog;
 use App\Models\Machine;
+use App\Models\OeeStandard;
 use App\Models\Personnel;
 use App\Models\ProductionSession;
 use Carbon\Carbon;
@@ -61,6 +63,18 @@ class ProductionController extends Controller
             );
 
             $machine = Machine::query()->lockForUpdate()->findOrFail($validated['machine_id']);
+
+            abort_unless(
+                OeeStandard::query()
+                    ->where('product_id', $validated['product_id'])
+                    ->where('machine_id', $machine->id)
+                    ->where('is_active', true)
+                    ->where('theoretical_output_kg', '>', 0)
+                    ->where('ideal_cycle_time_hours_per_kg', '>', 0)
+                    ->exists(),
+                422,
+                'Standar OEE belum tersedia untuk produk dan mesin ini.',
+            );
 
             abort_if(
                 ProductionSession::active()->where('machine_id', $machine->id)->exists(),
@@ -221,7 +235,7 @@ class ProductionController extends Controller
         ], 409);
     }
 
-    public function endSession(Request $request, ProductionSession $productionSession): JsonResponse
+    public function endSession(CompleteProductionSessionRequest $request, ProductionSession $productionSession): JsonResponse
     {
         abort_unless(
             $request->boolean('confirmed'),
@@ -229,32 +243,69 @@ class ProductionController extends Controller
             'Konfirmasi selesai produksi tidak diterima. Muat ulang halaman lalu coba lagi.'
         );
 
-        $session = DB::transaction(function () use ($request, $productionSession): ProductionSession {
+        $validated = $request->validated();
+
+        $session = DB::transaction(function () use ($request, $productionSession, $validated): ProductionSession {
             $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
             $this->assertController($lockedSession, $request);
             abort_if($lockedSession->status === 'downtime', 409, 'Selesaikan downtime terlebih dahulu.');
             abort_unless($lockedSession->status === 'running', 409, 'Sesi produksi sudah selesai.');
 
+            $endTime = now();
             $lastResumeTime = DowntimeLog::query()
                 ->where('production_session_id', $lockedSession->id)
                 ->whereNotNull('go_time')
                 ->latest('id')
                 ->value('go_time');
             abort_if(
-                $lastResumeTime && Carbon::parse($lastResumeTime)->diffInSeconds(now()) < 3,
+                $lastResumeTime && Carbon::parse($lastResumeTime)->diffInSeconds($endTime) < 3,
                 429,
                 'Mesin baru dijalankan kembali. Tunggu 3 detik sebelum menyelesaikan produksi.'
             );
 
             abort_if(
-                $lockedSession->start_time?->diffInSeconds(now()) < 3,
+                $lockedSession->start_time?->diffInSeconds($endTime) < 3,
                 429,
                 'Sesi baru dimulai. Tunggu 3 detik sebelum menyelesaikan produksi.'
             );
 
+            $standard = OeeStandard::query()
+                ->where('product_id', $lockedSession->product_id)
+                ->where('machine_id', $lockedSession->machine_id)
+                ->where('is_active', true)
+                ->where('theoretical_output_kg', '>', 0)
+                ->where('ideal_cycle_time_hours_per_kg', '>', 0)
+                ->first();
+            abort_if($standard === null, 422, 'Standar OEE belum tersedia untuk produk dan mesin ini.');
+
+            $closedDowntimeSeconds = (int) DowntimeLog::query()
+                ->where('production_session_id', $lockedSession->id)
+                ->whereNotNull('go_time')
+                ->sum('duration_seconds');
+            $operatingTimeSeconds = (int) $lockedSession->start_time->diffInSeconds($endTime) - $closedDowntimeSeconds;
+            abort_if($operatingTimeSeconds <= 0, 422, 'Waktu operasi produksi harus lebih dari 0 detik.');
+
+            // ponytail: inline OEE math because completion is the only calculation point; extract only if reused.
+            $actualOutputKg = (float) $validated['actual_output_kg'];
+            $theoreticalOutputKg = (float) $standard->theoretical_output_kg;
+            $idealCycleHoursPerKg = (float) $standard->ideal_cycle_time_hours_per_kg;
+            $operatingHours = $operatingTimeSeconds / 3600;
+            $availabilityPercent = $operatingTimeSeconds / (($lockedSession->planned_time_minutes ?: 480) * 60) * 100;
+            $qualityPercent = $actualOutputKg / $theoreticalOutputKg * 100;
+            $performancePercent = $idealCycleHoursPerKg * $actualOutputKg / $operatingHours * 100;
+            $oeePercent = $availabilityPercent * $qualityPercent * $performancePercent / 10000;
+
             $lockedSession->update([
                 'status' => 'completed',
-                'end_time' => now(),
+                'end_time' => $endTime,
+                'actual_output_kg' => $validated['actual_output_kg'],
+                'theoretical_output_kg' => $standard->theoretical_output_kg,
+                'ideal_cycle_time_hours_per_kg' => $standard->ideal_cycle_time_hours_per_kg,
+                'operating_time_seconds' => $operatingTimeSeconds,
+                'availability_percent' => $availabilityPercent,
+                'quality_percent' => $qualityPercent,
+                'performance_percent' => $performancePercent,
+                'oee_percent' => $oeePercent,
             ]);
 
             return $lockedSession;
@@ -348,6 +399,14 @@ class ProductionController extends Controller
                 'downtimeCount' => $session->downtimeLogs->count(),
                 'totalDowntimeSeconds' => $totalDowntimeSeconds,
                 'hasIncompleteDowntime' => $session->status === 'completed' && $activeDowntime !== null,
+            ],
+            'oee' => [
+                'actualOutputKg' => $session->actual_output_kg !== null ? (float) $session->actual_output_kg : null,
+                'availabilityPercent' => $session->availability_percent !== null ? (float) $session->availability_percent : null,
+                'qualityPercent' => $session->quality_percent !== null ? (float) $session->quality_percent : null,
+                'performancePercent' => $session->performance_percent !== null ? (float) $session->performance_percent : null,
+                'oeePercent' => $session->oee_percent !== null ? (float) $session->oee_percent : null,
+                'warnings' => $session->oeeWarnings(),
             ],
         ];
     }

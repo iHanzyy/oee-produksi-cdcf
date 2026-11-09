@@ -23,6 +23,7 @@ Alpine.data('productionControl', (config) => ({
     personnelId: '',
     replacedComponent: '',
     repairAction: '',
+    actualOutputKg: '',
     showDowntimeForm: false,
     formError: '',
     successBanner: '',
@@ -193,6 +194,7 @@ Alpine.data('productionControl', (config) => ({
     askFinish() {
         // Blokir jika sedang cooldown, busy, atau baru saja mulai/resume dalam 3 detik
         if (this.cooldown || this.busy || (Date.now() - this.lastActionTime < 3000)) return;
+        this.actualOutputKg = '';
         this.confirmTitle = 'Konfirmasi Selesai Produksi';
         this.confirmMessage = 'Apakah Anda yakin ingin menyelesaikan sesi produksi mesin ini? Pastikan proses produksi telah tuntas.';
         this.confirmButtonText = 'Selesaikan Produksi';
@@ -203,6 +205,13 @@ Alpine.data('productionControl', (config) => ({
         }, 800);
     },
 
+    canConfirm() {
+        if (!this.confirmReady) return false;
+        if (this.confirmAction !== 'finish') return true;
+        const value = String(this.actualOutputKg ?? '').trim();
+        return value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0;
+    },
+
     cancelConfirm() {
         this.confirmAction = '';
         this.confirmTitle = '';
@@ -211,7 +220,7 @@ Alpine.data('productionControl', (config) => ({
     },
 
     async executeConfirm() {
-        if (!this.confirmReady || this.cooldown || this.busy) return;
+        if (!this.canConfirm() || this.cooldown || this.busy) return;
         if (!this.confirmAction) return;
         const action = this.confirmAction;
         this.cancelConfirm();
@@ -289,7 +298,10 @@ Alpine.data('productionControl', (config) => ({
             || Date.now() - Date.parse(this.session.startTime) < 3000
         ) return;
 
-        await this.mutate(`${config.urls.base}/${this.session.id}/complete-confirmed`, { confirmed: true });
+        await this.mutate(`${config.urls.base}/${this.session.id}/complete-confirmed`, {
+            confirmed: true,
+            actual_output_kg: Number(this.actualOutputKg),
+        });
     },
 
     async acknowledge() {
@@ -304,7 +316,7 @@ Alpine.data('productionControl', (config) => ({
 
     async poll() {
         // Jangan polling jika operator sedang mengetik/mengisi form kendala atau membuka dropdown
-        if (this.busy || this.showDowntimeForm || this.productMenuOpen || this.machineMenuOpen) {
+        if (this.busy || this.confirmAction || this.showDowntimeForm || this.productMenuOpen || this.machineMenuOpen) {
             return;
         }
 
@@ -389,6 +401,7 @@ Alpine.data('productionControl', (config) => ({
             this.updateElapsed();
         } else if (this.session && payload.data && payload.data.status === 'completed') {
             this.session.summary = payload.data.summary;
+            this.session.oee = payload.data.oee;
             this.session.endTime = payload.data.endTime;
         }
 
@@ -429,6 +442,16 @@ Alpine.data('productionControl', (config) => ({
         const hours = Math.floor(value / 3600);
         const minutes = Math.floor((value % 3600) / 60);
         return hours > 0 ? `${hours} jam ${minutes} menit` : `${minutes} menit`;
+    },
+
+    formatOutput(value) {
+        if (value === null || value === undefined || value === '') return '-';
+        return `${Number(value).toLocaleString('id-ID', { maximumFractionDigits: 3 })} kg`;
+    },
+
+    formatPercent(value) {
+        if (value === null || value === undefined || value === '') return '-';
+        return `${Number(value).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
     },
 }));
 

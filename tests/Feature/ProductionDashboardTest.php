@@ -58,7 +58,24 @@ class ProductionDashboardTest extends TestCase
             ->assertDontSee('87.4%')
             ->assertDontSee('98.0%')
             ->assertDontSee('DATA DUMMY')
-            ->assertDontSee('Belum terhubung ke data mesin atau input produksi.');
+            ->assertDontSee('Belum terhubung ke data mesin atau input produksi.')
+            ->assertSee('Output Aktual (kg)')
+            ->assertSee('id="actual_output_kg"', false)
+            ->assertSee('x-model="actualOutputKg"', false)
+            ->assertSee('Availability')
+            ->assertSee('Quality')
+            ->assertSee('Performance')
+            ->assertSee('OEE')
+            ->assertSee('Peringatan')
+            ->assertSee('formatOutput(session?.oee?.actualOutputKg)', false)
+            ->assertSee('formatPercent(session?.oee?.availabilityPercent)', false)
+            ->assertSee('formatPercent(session?.oee?.qualityPercent)', false)
+            ->assertSee('formatPercent(session?.oee?.performancePercent)', false)
+            ->assertSee('formatPercent(session?.oee?.oeePercent)', false);
+
+        $script = file_get_contents(resource_path('js/app.js'));
+        $this->assertStringContainsString('actual_output_kg', $script);
+        $this->assertStringContainsString('canConfirm()', $script);
     }
 
     public function test_ready_screen_does_not_list_active_sessions_from_other_machines(): void
