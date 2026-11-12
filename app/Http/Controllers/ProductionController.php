@@ -64,14 +64,18 @@ class ProductionController extends Controller
 
             $machine = Machine::query()->lockForUpdate()->findOrFail($validated['machine_id']);
 
+            $standard = OeeStandard::query()
+                ->where('product_id', $validated['product_id'])
+                ->where('machine_id', $machine->id)
+                ->where('is_active', true)
+                ->first();
             abort_unless(
-                OeeStandard::query()
-                    ->where('product_id', $validated['product_id'])
-                    ->where('machine_id', $machine->id)
-                    ->where('is_active', true)
-                    ->where('theoretical_output_kg', '>', 0)
-                    ->where('ideal_cycle_time_hours_per_kg', '>', 0)
-                    ->exists(),
+                $standard
+                    && in_array($standard->process_type, ['unit_cycle', 'yield_ratio'], true)
+                    && in_array($standard->output_unit, ['tablet', 'strip', 'blister', 'kg'], true)
+                    && $standard->planned_time_minutes > 0
+                    && (float) $standard->theoretical_output > 0
+                    && ($standard->process_type !== 'unit_cycle' || (float) $standard->ideal_cycle_time_minutes_per_unit > 0),
                 422,
                 'Standar OEE belum tersedia untuk produk dan mesin ini.',
             );
@@ -90,6 +94,7 @@ class ProductionController extends Controller
                 'operator_name' => $validated['operator_name'],
                 'controller_token_hash' => $controllerHash,
                 'start_time' => now(),
+                'planned_time_minutes' => $standard->planned_time_minutes,
                 'status' => 'running',
             ]);
         });
@@ -282,34 +287,51 @@ class ProductionController extends Controller
                 ->where('product_id', $lockedSession->product_id)
                 ->where('machine_id', $lockedSession->machine_id)
                 ->where('is_active', true)
-                ->where('theoretical_output_kg', '>', 0)
-                ->where('ideal_cycle_time_hours_per_kg', '>', 0)
                 ->first();
-            abort_if($standard === null, 422, 'Standar OEE belum tersedia untuk produk dan mesin ini.');
+            abort_unless(
+                $standard
+                    && in_array($standard->process_type, ['unit_cycle', 'yield_ratio'], true)
+                    && in_array($standard->output_unit, ['tablet', 'strip', 'blister', 'kg'], true)
+                    && $standard->planned_time_minutes > 0
+                    && (float) $standard->theoretical_output > 0
+                    && ($standard->process_type !== 'unit_cycle' || (float) $standard->ideal_cycle_time_minutes_per_unit > 0),
+                422,
+                'Standar OEE belum tersedia untuk produk dan mesin ini.',
+            );
 
             $closedDowntimeSeconds = (int) DowntimeLog::query()
                 ->where('production_session_id', $lockedSession->id)
                 ->whereNotNull('go_time')
                 ->sum('duration_seconds');
-            $operatingTimeSeconds = (int) $lockedSession->start_time->diffInSeconds($endTime) - $closedDowntimeSeconds;
-            abort_if($operatingTimeSeconds <= 0, 422, 'Waktu operasi produksi harus lebih dari 0 detik.');
+            $plannedTimeSeconds = (int) $lockedSession->planned_time_minutes * 60;
+            $operatingTimeSeconds = $plannedTimeSeconds - $closedDowntimeSeconds;
+            abort_if($operatingTimeSeconds <= 0, 422, 'Waktu operasi produksi harus lebih dari 0 menit.');
 
             // ponytail: inline OEE math because completion is the only calculation point; extract only if reused.
-            $actualOutputKg = (float) $validated['actual_output_kg'];
-            $theoreticalOutputKg = (float) $standard->theoretical_output_kg;
-            $idealCycleHoursPerKg = (float) $standard->ideal_cycle_time_hours_per_kg;
-            $operatingHours = $operatingTimeSeconds / 3600;
-            $availabilityPercent = $operatingTimeSeconds / (($lockedSession->planned_time_minutes ?: 480) * 60) * 100;
-            $qualityPercent = $actualOutputKg / $theoreticalOutputKg * 100;
-            $performancePercent = $idealCycleHoursPerKg * $actualOutputKg / $operatingHours * 100;
+            $totalOutput = (float) $validated['total_output'];
+            $rejectOutput = (float) $validated['reject_output'];
+            $goodOutput = $totalOutput - $rejectOutput;
+            $operatingTimeMinutes = $operatingTimeSeconds / 60;
+            $availabilityPercent = $operatingTimeSeconds / $plannedTimeSeconds * 100;
+            $qualityPercent = $totalOutput > 0 ? $goodOutput / $totalOutput * 100 : 0;
+            $performancePercent = match ($standard->process_type) {
+                'unit_cycle' => (float) $standard->ideal_cycle_time_minutes_per_unit
+                    * $totalOutput / $operatingTimeMinutes * 100,
+                'yield_ratio' => $totalOutput > 0
+                    ? $operatingTimeMinutes * $goodOutput / ($operatingTimeMinutes * $totalOutput) * 100
+                    : 0,
+            };
             $oeePercent = $availabilityPercent * $qualityPercent * $performancePercent / 10000;
 
             $lockedSession->update([
                 'status' => 'completed',
                 'end_time' => $endTime,
-                'actual_output_kg' => $validated['actual_output_kg'],
-                'theoretical_output_kg' => $standard->theoretical_output_kg,
-                'ideal_cycle_time_hours_per_kg' => $standard->ideal_cycle_time_hours_per_kg,
+                'process_type' => $standard->process_type,
+                'output_unit' => $standard->output_unit,
+                'theoretical_output' => $standard->theoretical_output,
+                'ideal_cycle_time_minutes_per_unit' => $standard->ideal_cycle_time_minutes_per_unit,
+                'total_output' => $validated['total_output'],
+                'reject_output' => $validated['reject_output'],
                 'operating_time_seconds' => $operatingTimeSeconds,
                 'availability_percent' => $availabilityPercent,
                 'quality_percent' => $qualityPercent,
@@ -368,6 +390,13 @@ class ProductionController extends Controller
     private function sessionPayload(ProductionSession $session): array
     {
         $session->loadMissing(['machine.area', 'product', 'downtimeLogs']);
+        $standard = $session->process_type === null
+            ? OeeStandard::query()
+                ->where('product_id', $session->product_id)
+                ->where('machine_id', $session->machine_id)
+                ->where('is_active', true)
+                ->first()
+            : null;
         $activeDowntime = $session->downtimeLogs->firstWhere('go_time', null);
         $closedDowntimes = $session->downtimeLogs->whereNotNull('go_time');
         $elapsedSeconds = $session->start_time
@@ -410,6 +439,23 @@ class ProductionController extends Controller
                 'hasIncompleteDowntime' => $session->status === 'completed' && $activeDowntime !== null,
             ],
             'oee' => [
+                'processType' => $session->process_type ?? $standard?->process_type,
+                'outputUnit' => $session->output_unit ?? $standard?->output_unit,
+                'plannedTimeMinutes' => $session->planned_time_minutes,
+                'operatingTimeSeconds' => $session->operating_time_seconds,
+                'theoreticalOutput' => $session->theoretical_output !== null
+                    ? (float) $session->theoretical_output
+                    : ($standard?->theoretical_output !== null ? (float) $standard->theoretical_output : null),
+                'idealCycleTimeMinutesPerUnit' => $session->ideal_cycle_time_minutes_per_unit !== null
+                    ? (float) $session->ideal_cycle_time_minutes_per_unit
+                    : ($standard?->ideal_cycle_time_minutes_per_unit !== null
+                        ? (float) $standard->ideal_cycle_time_minutes_per_unit
+                        : null),
+                'totalOutput' => $session->total_output !== null ? (float) $session->total_output : null,
+                'rejectOutput' => $session->reject_output !== null ? (float) $session->reject_output : null,
+                'goodOutput' => $session->total_output !== null && $session->reject_output !== null
+                    ? (float) $session->total_output - (float) $session->reject_output
+                    : null,
                 'actualOutputKg' => $session->actual_output_kg !== null ? (float) $session->actual_output_kg : null,
                 'availabilityPercent' => $session->availability_percent !== null ? (float) $session->availability_percent : null,
                 'qualityPercent' => $session->quality_percent !== null ? (float) $session->quality_percent : null,

@@ -11,6 +11,9 @@ class OeeStandard extends Model
     protected function casts(): array
     {
         return [
+            'planned_time_minutes' => 'integer',
+            'theoretical_output' => 'decimal:3',
+            'ideal_cycle_time_minutes_per_unit' => 'decimal:10',
             'theoretical_output_kg' => 'decimal:3',
             'ideal_cycle_time_hours_per_kg' => 'decimal:10',
             'is_active' => 'boolean',

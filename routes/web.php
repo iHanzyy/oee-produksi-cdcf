@@ -25,6 +25,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
         Route::get('/history/active-sessions', [HistoryController::class, 'activeSessions'])->name('history.active_sessions');
         Route::get('/history/export-excel', [HistoryController::class, 'exportExcel'])->name('history.export');
+        Route::get('/history/{productionSession}', [HistoryController::class, 'show'])
+            ->whereNumber('productionSession')
+            ->name('history.show');
     });
 });
 

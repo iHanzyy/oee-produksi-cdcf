@@ -16,7 +16,7 @@ class ProductionMasterSeederTest extends TestCase
         $this->seed(ProductionMasterSeeder::class);
 
         $this->assertDatabaseCount('areas', 5);
-        $this->assertDatabaseCount('products', 26);
+        $this->assertDatabaseCount('products', 29);
         $this->assertDatabaseCount('machines', 11);
         $this->assertDatabaseCount('downtime_categories', 5);
         $this->assertDatabaseCount('personnels', 3);
@@ -26,10 +26,13 @@ class ProductionMasterSeederTest extends TestCase
             ->where('area_name', 'Tablet Hormon')
             ->value('id');
 
-        $this->assertSame(22, $this->getConnection()->table('products')->where('area_id', $tabletHormonId)->count());
+        $this->assertSame(25, $this->getConnection()->table('products')->where('area_id', $tabletHormonId)->count());
         $this->assertSame(7, $this->getConnection()->table('machines')->where('area_id', $tabletHormonId)->where('is_active', true)->count());
         $this->assertDatabaseHas('products', ['area_id' => $tabletHormonId, 'product_name' => 'Novasteron']);
         $this->assertDatabaseHas('products', ['area_id' => $tabletHormonId, 'product_name' => 'Dienogest']);
+        $this->assertDatabaseHas('products', ['area_id' => $tabletHormonId, 'product_name' => 'Trinordiol Fase 1']);
+        $this->assertDatabaseHas('products', ['area_id' => $tabletHormonId, 'product_name' => 'Trinordiol Fase 2']);
+        $this->assertDatabaseHas('products', ['area_id' => $tabletHormonId, 'product_name' => 'Trinordiol Fase 3']);
         $this->assertDatabaseHas('machines', ['area_id' => $tabletHormonId, 'machine_name' => 'Cetak Gylongli 1']);
         $this->assertDatabaseHas('machines', ['area_id' => $tabletHormonId, 'machine_name' => 'Coating Yenchen']);
     }

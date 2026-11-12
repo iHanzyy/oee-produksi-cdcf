@@ -15,6 +15,10 @@ class ProductionSession extends Model
         return [
             'start_time' => 'datetime',
             'end_time' => 'datetime',
+            'theoretical_output' => 'decimal:3',
+            'ideal_cycle_time_minutes_per_unit' => 'decimal:10',
+            'total_output' => 'decimal:3',
+            'reject_output' => 'decimal:3',
             'actual_output_kg' => 'decimal:3',
             'theoretical_output_kg' => 'decimal:3',
             'ideal_cycle_time_hours_per_kg' => 'decimal:10',
@@ -40,6 +44,8 @@ class ProductionSession extends Model
     {
         return $query
             ->with(['machine.area', 'product'])
+            ->withCount('downtimeLogs')
+            ->withSum('downtimeLogs', 'duration_seconds')
             ->where('status', 'completed')
             ->when(isset($filters['start_date']), function (Builder $query) use ($filters): void {
                 $start = CarbonImmutable::createFromFormat('Y-m-d', $filters['start_date'], 'Asia/Jakarta')
@@ -87,6 +93,6 @@ class ProductionSession extends Model
 
     public function downtimeLogs()
     {
-        return $this->hasMany(DowntimeLog::class);
+        return $this->hasMany(DowntimeLog::class)->chaperone();
     }
 }

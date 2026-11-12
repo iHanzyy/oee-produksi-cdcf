@@ -22,7 +22,8 @@ Alpine.data('productionControl', (config) => ({
     personnelId: '',
     replacedComponent: '',
     repairAction: '',
-    actualOutputKg: '',
+    totalOutput: '',
+    rejectOutput: '',
     showDowntimeForm: false,
     formError: '',
     successBanner: '',
@@ -36,6 +37,7 @@ Alpine.data('productionControl', (config) => ({
     elapsed: '00:00:00',
     downtimeElapsed: '00:00:00',
     busy: false,
+    busyMessage: 'Menyimpan perubahan...',
     error: '',
     cooldown: false,
     lastActionTime: 0,
@@ -59,6 +61,22 @@ Alpine.data('productionControl', (config) => ({
 
     get state() {
         return this.session?.status ?? 'ready';
+    },
+
+    get outputUnitLabel() {
+        return this.session?.oee?.outputUnit ?? 'unit';
+    },
+
+    get outputStep() {
+        return this.outputUnitLabel === 'kg' ? '0.001' : '1';
+    },
+
+    get goodOutput() {
+        const total = Number(this.totalOutput);
+        const reject = Number(this.rejectOutput);
+        if (String(this.totalOutput).trim() === '' || String(this.rejectOutput).trim() === '') return null;
+        if (!Number.isFinite(total) || !Number.isFinite(reject) || reject > total) return null;
+        return total - reject;
     },
 
     get selectedArea() {
@@ -138,7 +156,6 @@ Alpine.data('productionControl', (config) => ({
         }
 
         this.cooldown = true;
-        this.busy = true;
         this.lastActionTime = Date.now();
 
         const succeeded = await this.mutate(config.urls.start, {
@@ -147,7 +164,7 @@ Alpine.data('productionControl', (config) => ({
             product_id: this.productId,
             batch_number: this.batchNumber,
             machine_id: this.machineId,
-        });
+        }, 'Menyiapkan sesi produksi...');
 
         if (succeeded) {
             this.successBanner = 'Sesi produksi dimulai. Mesin siap dipantau.';
@@ -163,7 +180,11 @@ Alpine.data('productionControl', (config) => ({
     },
 
     async takeover(sessionId) {
-        await this.mutate(`${config.urls.base}/${sessionId}/takeover`);
+        await this.mutate(
+            `${config.urls.base}/${sessionId}/takeover`,
+            {},
+            'Mengalihkan kontrol ke tablet ini...'
+        );
     },
 
     askStop() {
@@ -180,7 +201,11 @@ Alpine.data('productionControl', (config) => ({
 
     async stop() {
         this.lastActionTime = Date.now();
-        const succeeded = await this.mutate(`${config.urls.base}/${this.session.id}/stop`);
+        const succeeded = await this.mutate(
+            `${config.urls.base}/${this.session.id}/stop`,
+            {},
+            'Menghentikan mesin...'
+        );
         if (succeeded) {
             this.showDowntimeForm = false;
             this.formError = '';
@@ -193,9 +218,10 @@ Alpine.data('productionControl', (config) => ({
 
     askFinish() {
         if (this.cooldown || this.busy || (Date.now() - this.lastActionTime < 3000)) return;
-        this.actualOutputKg = '';
+        this.totalOutput = '';
+        this.rejectOutput = '';
         this.confirmTitle = 'Konfirmasi Selesai Produksi';
-        this.confirmMessage = 'Pastikan proses produksi untuk batch ini sudah tuntas sebelum menyimpan output aktual.';
+        this.confirmMessage = 'Pastikan proses produksi sudah tuntas, lalu isi total output dan reject.';
         this.confirmButtonText = 'Selesaikan Produksi';
         this.confirmAction = 'finish';
         this.confirmReady = false;
@@ -207,8 +233,15 @@ Alpine.data('productionControl', (config) => ({
     canConfirm() {
         if (!this.confirmReady) return false;
         if (this.confirmAction !== 'finish') return true;
-        const value = String(this.actualOutputKg ?? '').trim();
-        return value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0;
+        const total = String(this.totalOutput ?? '').trim();
+        const reject = String(this.rejectOutput ?? '').trim();
+        return total !== ''
+            && reject !== ''
+            && Number.isFinite(Number(total))
+            && Number.isFinite(Number(reject))
+            && Number(total) >= 0
+            && Number(reject) >= 0
+            && Number(reject) <= Number(total);
     },
 
     cancelConfirm() {
@@ -264,7 +297,7 @@ Alpine.data('productionControl', (config) => ({
             personnel_id: Number(this.personnelId),
             replaced_component: this.replacedComponent,
             repair_action: this.repairAction,
-        });
+        }, 'Menyimpan kendala dan menjalankan mesin...');
 
         if (succeeded) {
             this.showDowntimeForm = false;
@@ -295,12 +328,17 @@ Alpine.data('productionControl', (config) => ({
 
         await this.mutate(`${config.urls.base}/${this.session.id}/complete-confirmed`, {
             confirmed: true,
-            actual_output_kg: Number(this.actualOutputKg),
-        });
+            total_output: Number(this.totalOutput),
+            reject_output: Number(this.rejectOutput),
+        }, 'Menyelesaikan sesi produksi...');
     },
 
     async acknowledge() {
-        if (await this.mutate(`${config.urls.base}/${this.session.id}/acknowledge`)) {
+        if (await this.mutate(
+            `${config.urls.base}/${this.session.id}/acknowledge`,
+            {},
+            'Menyiapkan sesi baru...'
+        )) {
             this.cancelConfirm();
             this.areaId = '';
             this.operatorName = '';
@@ -335,8 +373,9 @@ Alpine.data('productionControl', (config) => ({
         }
     },
 
-    async mutate(url, body = {}) {
+    async mutate(url, body = {}, busyMessage = 'Menyimpan perubahan...') {
         this.busy = true;
+        this.busyMessage = busyMessage;
         this.error = '';
 
         try {
@@ -460,7 +499,7 @@ Alpine.data('productionControl', (config) => ({
 
     formatOutput(value) {
         if (value === null || value === undefined || value === '') return '-';
-        return `${Number(value).toLocaleString('id-ID', { maximumFractionDigits: 3 })} kg`;
+        return `${Number(value).toLocaleString('id-ID', { maximumFractionDigits: 3 })} ${this.outputUnitLabel}`;
     },
 
     formatPercent(value) {

@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Exports\DowntimeHistoryExport;
 use App\Models\Area;
+use App\Models\DowntimeCategory;
 use App\Models\DowntimeLog;
 use App\Models\Machine;
+use App\Models\Personnel;
 use App\Models\Product;
 use App\Models\ProductionSession;
 use App\Models\User;
@@ -22,16 +24,29 @@ class HistoryReportingTest extends TestCase
 
     public function test_reporting_routes_are_readable_by_spv_and_manager_but_forbidden_to_operator(): void
     {
+        $area = Area::create(['area_name' => 'Tablet Hormon']);
+        $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
+        $completedSession = ProductionSession::create([
+            'machine_id' => $machine->id,
+            'operator_name' => 'Budi',
+            'batch_number' => 'BATCH-ACCESS-01',
+            'start_time' => '2026-09-24 01:00:00',
+            'end_time' => '2026-09-24 09:00:00',
+            'status' => 'completed',
+        ]);
+
         foreach (['spv', 'manager'] as $role) {
             $user = User::factory()->create(['role' => $role]);
 
             $this->actingAs($user)->get(route('history.index'))->assertOk();
+            $this->actingAs($user)->get(route('history.show', $completedSession))->assertOk();
             $this->actingAs($user)->get(route('history.export'))->assertDownload('Laporan_Downtime_OEE.xlsx');
         }
 
         $operator = User::factory()->create(['role' => 'operator']);
 
         $this->actingAs($operator)->get(route('history.index'))->assertRedirect(route('dashboard'));
+        $this->actingAs($operator)->get(route('history.show', $completedSession))->assertRedirect(route('dashboard'));
         $this->actingAs($operator)->get(route('history.export'))->assertRedirect(route('dashboard'));
     }
 
@@ -95,16 +110,14 @@ class HistoryReportingTest extends TestCase
 
         $response = $this->actingAs($spv)->get(route('history.index', $filters))->assertOk();
 
-        $response->assertViewHas('logs', function (LengthAwarePaginator $logs) use ($newer, $older, $filters): bool {
-            $this->assertSame([$newer->id, $older->id], $logs->pluck('id')->all());
-            $this->assertStringContainsString('area_id='.$filters['area_id'], $logs->url(2));
+        $response->assertViewMissing('logs');
+        $response->assertViewHas('completedSessions', function (LengthAwarePaginator $sessions) use ($filters): bool {
+            $this->assertStringContainsString('area_id='.$filters['area_id'], $sessions->url(2));
 
-            foreach ($logs as $log) {
-                $this->assertTrue($log->relationLoaded('productionSession'));
-                $this->assertTrue($log->productionSession->relationLoaded('machine'));
-                $this->assertTrue($log->productionSession->machine->relationLoaded('area'));
-                $this->assertTrue($log->relationLoaded('downtimeCategory'));
-                $this->assertTrue($log->relationLoaded('personnel'));
+            foreach ($sessions as $session) {
+                $this->assertTrue($session->relationLoaded('machine'));
+                $this->assertTrue($session->machine->relationLoaded('area'));
+                $this->assertTrue($session->relationLoaded('product'));
             }
 
             return true;
@@ -187,13 +200,22 @@ class HistoryReportingTest extends TestCase
         $completed = $this->createDowntime($machine, '2026-09-24 00:10:00', 'completed', '2026-09-24 00:15:00', 300);
 
         $this->actingAs($manager)
-            ->get(route('history.index'))
+            ->get(route('history.show', $incomplete->productionSession))
             ->assertOk()
             ->assertSee('24 Sep 2026')
-            ->assertSee('07:30:00')
-            ->assertSee('Berlangsung')
-            ->assertSee('Data tidak lengkap')
+            ->assertSee('07:20:00')
+            ->assertSee('Data tidak lengkap');
+
+        $this->actingAs($manager)
+            ->get(route('history.show', $completed->productionSession))
+            ->assertOk()
+            ->assertSee('24 Sep 2026')
+            ->assertSee('07:10:00')
             ->assertSee('Selesai');
+
+        $this->actingAs($manager)
+            ->get(route('history.show', $active->productionSession))
+            ->assertNotFound();
 
         $export = new DowntimeHistoryExport([]);
 
@@ -209,6 +231,8 @@ class HistoryReportingTest extends TestCase
         $tabletArea = Area::create(['area_name' => 'Tablet Hormon']);
         $packingArea = Area::create(['area_name' => 'Packing Hormon']);
         $product = Product::create(['area_id' => $tabletArea->id, 'product_name' => 'Alyrenol']);
+        $category = DowntimeCategory::create(['category_name' => 'Mekanik']);
+        $technician = Personnel::create(['name' => 'Andi', 'role' => 'Teknisi']);
         $mixing = Machine::create(['area_id' => $tabletArea->id, 'machine_name' => 'Mixing']);
         $packingMachine = Machine::create(['area_id' => $packingArea->id, 'machine_name' => 'Mesin Packing Hormon 1']);
 
@@ -220,14 +244,16 @@ class HistoryReportingTest extends TestCase
             'start_time' => '2026-09-24 01:00:00',
             'end_time' => '2026-09-24 09:00:00',
             'status' => 'completed',
-            'actual_output_kg' => 35,
-            'theoretical_output_kg' => 40,
-            'ideal_cycle_time_hours_per_kg' => 0.2,
+            'process_type' => 'yield_ratio',
+            'output_unit' => 'kg',
+            'total_output' => 35,
+            'reject_output' => 2,
+            'theoretical_output' => 40,
             'operating_time_seconds' => 28800,
             'availability_percent' => 100,
-            'quality_percent' => 87.5,
-            'performance_percent' => 87.5,
-            'oee_percent' => 76.5625,
+            'quality_percent' => 94.2857,
+            'performance_percent' => 94.2857,
+            'oee_percent' => 88.898,
         ]);
 
         $multiDowntime = ProductionSession::create([
@@ -235,7 +261,7 @@ class HistoryReportingTest extends TestCase
             'product_id' => $product->id,
             'operator_name' => 'Siti',
             'batch_number' => 'BATCH-OEE-WARN',
-            'start_time' => '2026-09-24 02:00:00',
+            'start_time' => '2026-09-23 15:00:00',
             'end_time' => '2026-09-24 10:00:00',
             'status' => 'completed',
             'actual_output_kg' => 50,
@@ -248,17 +274,24 @@ class HistoryReportingTest extends TestCase
             'oee_percent' => 156.25,
         ]);
 
-        DowntimeLog::create([
+        $laterDowntime = DowntimeLog::create([
             'production_session_id' => $multiDowntime->id,
-            'stop_time' => '2026-09-24 03:00:00',
-            'go_time' => '2026-09-24 03:30:00',
-            'duration_seconds' => 1800,
-        ]);
-        DowntimeLog::create([
-            'production_session_id' => $multiDowntime->id,
+            'downtime_category_id' => $category->id,
+            'personnel_id' => $technician->id,
             'stop_time' => '2026-09-24 05:00:00',
             'go_time' => '2026-09-24 05:30:00',
             'duration_seconds' => 1800,
+            'repair_action' => 'Stel ulang pisau',
+            'replaced_component' => 'Pisau potong',
+        ]);
+        $earlierPrevDayDowntime = DowntimeLog::create([
+            'production_session_id' => $multiDowntime->id,
+            'downtime_category_id' => $category->id,
+            'personnel_id' => $technician->id,
+            'stop_time' => '2026-09-23 16:00:00',
+            'go_time' => '2026-09-23 16:30:00',
+            'duration_seconds' => 1800,
+            'repair_action' => 'Bersihkan hopper',
         ]);
 
         $legacyNull = ProductionSession::create([
@@ -307,22 +340,97 @@ class HistoryReportingTest extends TestCase
                 $this->assertTrue($session->relationLoaded('product'));
             }
 
+            $this->assertSame(2, (int) $sessions->first()->downtime_logs_count);
+            $this->assertSame(3600, (int) $sessions->first()->downtime_logs_sum_duration_seconds);
+
             return true;
         });
 
-        $response->assertViewHas('logs', fn (LengthAwarePaginator $logs): bool => $logs->getPageName() === 'page' && $logs->total() === 2);
+        $response->assertViewMissing('logs');
 
         $response
             ->assertSee('Riwayat Produksi/OEE')
+            ->assertDontSee('Riwayat Kendala & Downtime')
             ->assertSee('BATCH-OEE-NODT')
             ->assertSee('BATCH-OEE-WARN')
             ->assertSee('BATCH-OEE-LEGACY')
             ->assertDontSee('BATCH-OEE-PACK')
             ->assertSee('35 kg')
-            ->assertSee('76,56%')
-            ->assertSee('125,00%')
+            ->assertSee('Good: 33 kg')
+            ->assertSee('Reject: 2 kg')
+            ->assertSee('40 kg')
+            ->assertSee('+10 kg')
+            ->assertSee('88,90%')
             ->assertSee('156,25%')
-            ->assertSee('Quality melebihi 100%. Performance melebihi 100%. OEE melebihi 100%.');
+            ->assertSee('Quality melebihi 100%. Performance melebihi 100%. OEE melebihi 100%.')
+            ->assertSee('Data OEE sesi ini belum lengkap.')
+            ->assertSee('Lihat detail')
+            ->assertSee(route('history.show', $multiDowntime), false)
+            ->assertDontSee('id="session-detail-'.$multiDowntime->id.'"', false);
+
+        $detailResponse = $this->actingAs($spv)->get(route('history.show', [
+            'productionSession' => $multiDowntime,
+            'start_date' => '2026-09-24',
+            'end_date' => '2026-09-24',
+            'area_id' => $tabletArea->id,
+            'machine_id' => $mixing->id,
+        ]))->assertOk();
+
+        $detailSession = $detailResponse->viewData('session');
+        $this->assertTrue($detailSession->relationLoaded('machine'));
+        $this->assertTrue($detailSession->machine->relationLoaded('area'));
+        $this->assertTrue($detailSession->relationLoaded('product'));
+        $this->assertTrue($detailSession->relationLoaded('downtimeLogs'));
+        $this->assertSame(
+            [$earlierPrevDayDowntime->id, $laterDowntime->id],
+            $detailSession->downtimeLogs->pluck('id')->all(),
+        );
+        foreach ($detailSession->downtimeLogs as $log) {
+            $this->assertTrue($log->relationLoaded('downtimeCategory'));
+            $this->assertTrue($log->relationLoaded('personnel'));
+            $this->assertTrue($log->relationLoaded('productionSession'));
+        }
+
+        $detailResponse
+            ->assertSee('Detail Sesi Produksi')
+            ->assertSee('Kembali ke Riwayat')
+            ->assertSee('BATCH-OEE-WARN')
+            ->assertSee('50 kg')
+            ->assertSee('40 kg')
+            ->assertSee('+10 kg')
+            ->assertSee('87,50%')
+            ->assertSee('125,00%')
+            ->assertSee('142,86%')
+            ->assertSee('156,25%')
+            ->assertSee('Quality melebihi 100%. Performance melebihi 100%. OEE melebihi 100%.')
+            ->assertSee('Mekanik')
+            ->assertSee('Pisau potong')
+            ->assertSee('Andi')
+            ->assertSeeInOrder(['Bersihkan hopper', 'Stel ulang pisau']);
+
+        $this->actingAs($spv)
+            ->get(route('history.show', $noDowntime))
+            ->assertOk()
+            ->assertSee('Total Output')
+            ->assertSee('35 kg')
+            ->assertSee('Reject')
+            ->assertSee('2 kg')
+            ->assertSee('Good Output')
+            ->assertSee('33 kg')
+            ->assertSee('Sesi ini selesai tanpa kendala yang tercatat.');
+
+        $this->actingAs($spv)
+            ->get(route('history.show', $legacyNull))
+            ->assertOk()
+            ->assertSee('Data OEE sesi ini belum lengkap.');
+
+        $this->actingAs($spv)
+            ->get(route('history.index', [
+                'start_date' => '2026-09-20',
+                'end_date' => '2026-09-20',
+            ]))
+            ->assertOk()
+            ->assertSee('Belum ada sesi produksi selesai pada filter ini.');
     }
 
     private function createDowntime(

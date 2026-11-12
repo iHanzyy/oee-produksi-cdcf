@@ -16,7 +16,7 @@
                             Kontrol Sesi
                         </x-nav-link>
                     @else
-                        <x-nav-link :href="route('history.index')" :active="request()->routeIs('history.index')" class="text-sm sm:text-base font-semibold">
+                        <x-nav-link :href="route('history.index')" :active="request()->routeIs('history.*')" class="text-sm sm:text-base font-semibold">
                             Riwayat & Arsip
                         </x-nav-link>
                     @endif

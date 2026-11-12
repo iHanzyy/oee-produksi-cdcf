@@ -29,6 +29,10 @@ class EndToEndProductionFlowTest extends TestCase
         OeeStandard::create([
             'product_id' => $product->id,
             'machine_id' => $machine->id,
+            'process_type' => 'yield_ratio',
+            'output_unit' => 'kg',
+            'planned_time_minutes' => 480,
+            'theoretical_output' => 40,
             'theoretical_output_kg' => 40,
             'ideal_cycle_time_hours_per_kg' => 0.075,
         ]);
@@ -72,7 +76,7 @@ class EndToEndProductionFlowTest extends TestCase
         Carbon::setTestNow('2026-09-25 09:00:03');
 
         $this->actingAs($operator)->withCredentials()->withCookie('device_token', $token)
-            ->postJson(route('machine.end', $sessionId), ['confirmed' => true, 'actual_output_kg' => 35])
+            ->postJson(route('machine.end', $sessionId), ['confirmed' => true, 'total_output' => 35, 'reject_output' => 2])
             ->assertOk()
             ->assertJsonPath('data.status', 'completed')
             ->assertJsonPath('data.summary.hadDowntime', true)
@@ -89,6 +93,14 @@ class EndToEndProductionFlowTest extends TestCase
             ->assertSee('Riwayat Produksi/OEE')
             ->assertSee('35 kg')
             ->assertSee('Mixing')
+            ->assertSee('BATCH-E2E-001')
+            ->assertSee('1 kendala')
+            ->assertSee(route('history.show', $sessionId), false);
+
+        $this->actingAs($spv)
+            ->get(route('history.show', $sessionId))
+            ->assertOk()
+            ->assertSee('Detail Sesi Produksi')
             ->assertSee('BATCH-E2E-001')
             ->assertSee('Mengganti bearing')
             ->assertSee('Selesai');

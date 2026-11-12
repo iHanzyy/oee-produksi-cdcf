@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Exports\DowntimeHistoryExport;
 use App\Http\Requests\HistoryFilterRequest;
 use App\Models\Area;
-use App\Models\DowntimeLog;
 use App\Models\Machine;
 use App\Models\ProductionSession;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -19,7 +19,6 @@ class HistoryController extends Controller
     {
         $filters = $request->filters();
         $completedSessions = ProductionSession::query()->forHistory($filters)->paginate(15, ['*'], 'session_page')->withQueryString();
-        $logs = DowntimeLog::query()->forHistory($filters)->paginate(15)->withQueryString();
         $areas = Area::query()->orderBy('area_name')->get();
         $machines = Machine::query()
             ->when(isset($filters['area_id']), fn ($query) => $query->where('area_id', $filters['area_id']))
@@ -34,7 +33,31 @@ class HistoryController extends Controller
             ->values();
         $serverNow = now('Asia/Jakarta')->toIso8601String();
 
-        return view('history', compact('completedSessions', 'logs', 'areas', 'machines', 'activeSessions', 'serverNow'));
+        return view('history', compact('completedSessions', 'areas', 'machines', 'activeSessions', 'serverNow'));
+    }
+
+    public function show(Request $request, ProductionSession $productionSession)
+    {
+        abort_unless($productionSession->status === 'completed', 404);
+
+        $productionSession->load([
+            'machine.area',
+            'product',
+            'downtimeLogs' => fn ($query) => $query
+                ->with(['downtimeCategory', 'personnel'])
+                ->orderBy('stop_time')
+                ->orderBy('id'),
+        ]);
+
+        $backQuery = array_filter(
+            $request->only(['start_date', 'end_date', 'area_id', 'machine_id', 'session_page']),
+            fn ($value) => is_scalar($value) && trim((string) $value) !== '',
+        );
+
+        return view('history-show', [
+            'session' => $productionSession,
+            'backUrl' => route('history.index', $backQuery),
+        ]);
     }
 
     public function activeSessions(): JsonResponse

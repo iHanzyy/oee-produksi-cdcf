@@ -1,123 +1,79 @@
-# Implementation Plan: Kontrol Produksi Multi-Tablet
+# Implementation Plan: Rumus OEE dan Input Output Produksi
+
+Source: `docs/specs/SPEC-oee-formulas-and-output.md`
 
 ## Overview
 
-Implementasi mengikuti capability map yang disetujui: akses role dan master data menjadi fondasi, dilanjutkan kontrol sesi produksi, downtime, lalu pelaporan. Setiap tahap meninggalkan aplikasi dalam kondisi dapat diuji dan tidak mereset data historis.
-
-## Approved Sources
-
-- `CAPABILITY-MAP.md`
-- `docs/ideas/kontrol-produksi-multi-tablet.md`
-- `docs/specs/ENGINEERING-CONTRACT.md`
-- `docs/specs/SPEC-*.md`
+Ganti kontrak OEE lama yang berbasis kilogram dengan standar generik per produk-mesin, lalu alirkan snapshot standar, input Total/Reject, rumus per jenis proses, dan satuan dinamis sampai dashboard serta riwayat. Perubahan tetap additive untuk schema agar sesi legacy dan pekerjaan history-detail yang belum di-commit tidak rusak.
 
 ## Architecture Decisions
 
-- Gunakan middleware role sederhana; tidak menambah package permission.
-- Gunakan cookie perangkat terenkripsi otomatis. Database hanya menyimpan hash token kontrol.
-- Gunakan transaksi dan row lock mesin agar request pertama menang tanpa distributed lock.
-- Gunakan Blade + Alpine untuk satu layar adaptif dan searchable combobox.
-- Gunakan endpoint JSON kecil untuk polling lima detik; tidak memakai WebSocket.
-- Simpan waktu secara konsisten dan tampilkan `Asia/Jakarta` menggunakan timestamp ber-offset.
-- Pertahankan data lama; master lama dinonaktifkan dari input tetapi tetap dapat dibaca histori.
-- Pusatkan filter downtime pada query scope agar layar dan export memakai aturan yang sama.
+- Tambah field generik pada `oee_standards` dan `production_sessions`; jangan hapus field `_kg`/`_pcs` legacy.
+- Gunakan dua jenis proses saja: `unit_cycle` dan `yield_ratio`; tidak membuat class kalkulator karena rumus hanya dipakai saat completion.
+- Simpan planned time pada sesi saat start dan snapshot standar lain saat completion.
+- Hitung Good Output di server dari Total dikurangi Reject; frontend hanya memberi preview.
+- Gunakan field output decimal yang sama untuk unit dan kg; UI memakai langkah `1` untuk unit serta `0.001` untuk kg.
 
 ## Dependency Graph
 
 ```text
-Task 1 role enforcement ─┬─> Task 2 auth surface
-                        └─> Task 6 session control
-
-Task 3 master schema ─> Task 4 master seed/UI data ─> Task 5 session ownership schema
-                                                     └─> Task 6 session control
-
-Task 6 session control ─> Task 7 adaptive UI ─> Task 8 downtime + summary
-
-Task 8 downtime + summary ─┬─> Task 10 reporting
-Task 9 dependency security ─┘
-
-Tasks 1-10 ─> Task 11 integration verification
+Task 1 schema/model contract
+    -> Task 2 master standards
+        -> Task 3 completion formulas
+            -> Task 4 operator UI
+                -> Task 5 history compatibility
 ```
 
 ## Task List
 
-Rincian acceptance criteria, verification, dependencies, file, dan estimasi berada di `tasks/todo.md`.
+Rincian acceptance criteria dan verifikasi berada di `tasks/todo.md`.
 
-### Phase 1A: Access Foundation
+### Phase 1: Data Foundation
 
-- [ ] Task 1: Enforce role access and redirects
-- [ ] Task 2: Close registration and align auth tests/navigation
+- [x] Task 1: Tambahkan kontrak schema dan model OEE generik
+- [x] Task 2: Seed standar produk-mesin dari gambar
 
-### Checkpoint: Access
+### Checkpoint: Data Foundation
 
-- [ ] Role matrix and authentication surface pass focused tests.
-- [ ] Review access behavior before schema changes.
+- [x] Migration berjalan pada database kosong dan database existing.
+- [x] Seeder dua kali menghasilkan 29 produk, 11 mesin, dan 72 standar tanpa duplikasi.
+- [x] Data session legacy tetap tersedia.
 
-### Phase 1B: Master Foundation
+### Phase 2: Calculation Slice
 
-- [ ] Task 3: Add production master schema and models
-- [ ] Task 4: Seed approved production master data
+- [x] Task 3: Terapkan input, validasi, snapshot, dan rumus OEE baru
 
-### Checkpoint: Master Data
+### Checkpoint: Calculation
 
-- [ ] Master seeder runs twice without duplicates.
-- [ ] No existing production session or downtime row is deleted.
+- [x] Test membuktikan RED lalu GREEN untuk `unit_cycle` dan `yield_ratio`.
+- [x] Reject di atas total dan operating time nonpositif ditolak tanpa menyelesaikan sesi.
+- [x] Nilai di atas 100% tetap disimpan dan diberi peringatan.
 
-### Phase 2: Production Control
+### Phase 3: User Flow and Reporting
 
-- [ ] Task 5: Add browser ownership and session schema
-- [ ] Task 6: Implement atomic start, takeover, and polling
-- [ ] Task 7: Build the adaptive Operator screen
-- [ ] Task 8: Implement downtime transitions and final summary
-
-### Checkpoint: Production Control
-
-- [ ] Two different machines run concurrently from the shared Operator account.
-- [ ] Competing starts on one machine create exactly one active session.
-- [ ] Refresh, login ulang, polling, and takeover work end-to-end.
-- [ ] Running → downtime → running → completed works without orphan logs.
-
-### Phase 3: Reporting and Release Gate
-
-- [x] Task 9: Upgrade vulnerable export dependencies
-- [x] Task 10: Align history, filters, and export
-- [x] Task 11: Run integration, responsive, and documentation verification
+- [x] Task 4: Ubah dialog selesai produksi menjadi Total dan Reject bersatuan dinamis
+- [x] Task 5: Tampilkan snapshot output baru tanpa merusak history legacy
 
 ### Checkpoint: Complete
 
-- [x] All relevant tests pass and the stale baseline failures are resolved.
-- [x] Frontend production build succeeds.
-- [x] Scoped Pint checks pass; unrelated user change in `public/index.php` remains untouched.
-- [x] Composer/npm audits have no untriaged advisory affecting used paths.
-- [x] Desktop and tablet flows pass manual runtime verification.
-
-## Parallelization
-
-- Tasks 1 and 3 can be developed independently after their contracts are fixed.
-- Tasks 2 and 4 follow their respective foundation task.
-- Tasks 5-8 are sequential because they share the production state contract.
-- Task 9 can run beside Task 8; Task 10 waits for both.
-- Task 11 runs after all implementation tasks.
+- [x] Focused tests, suite lengkap, scoped Pint, dan frontend build lulus.
+- [x] Runtime flow unit-cycle dan yield-ratio lulus pada viewport tablet.
+- [x] Perubahan history-detail yang sudah ada tetap bekerja.
 
 ## Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Shared account cannot prove human identity | Medium | Store free-text Operator name and state clearly that it is an operational label |
-| Tablet/browser storage cleared | Medium | Offer takeover of an existing machine session without creating a new session |
-| Simultaneous start requests | High | Lock the machine row inside one database transaction and return HTTP 409 to the loser |
-| Browser lama acts after takeover | High | Verify controller-token hash on every mutation and expose ownership through polling |
-| Legacy open downtime logs | Medium | Label completed legacy records as incomplete; never present them as currently running |
-| Current export dependencies are vulnerable | High | Upgrade before reporting sign-off and require a clean locked audit |
-| Existing tests and formatting are already red | Medium | Record baseline, fix tests in owning task, format only touched files, report unrelated residue |
+| Nama field legacy menyebut kg/pcs | Medium | Tambah field generik; jangan reinterpretasi atau hapus data lama |
+| Standard berubah saat sesi berjalan | Medium | Snapshot planned time saat start dan standard lainnya saat completion |
+| Downtime melebihi planned time | High | Tolak completion dan pertahankan sesi running |
+| Salah satuan membuat Performance salah besar | High | Simpan `output_unit`, tampilkan pada input, dan test setiap jenis proses |
+| File history sedang memiliki perubahan user | High | Edit hanya blok output/OEE terkait dan pertahankan diff lain |
+
+## Parallelization
+
+Tidak diparalelkan. Lima task menyentuh kontrak data yang sama dan harus berjalan berurutan agar setiap checkpoint dapat diuji.
 
 ## Open Questions
 
-- None. Any scope change updates the approved specs before implementation.
-
-## Estimated Effort
-
-- Foundation: 90–120 minutes.
-- Production control: 180–240 minutes.
-- Reporting and release verification: 90–120 minutes.
-- Total implementation estimate: 6–8 focused hours.
+- Tidak ada.

@@ -21,11 +21,22 @@ class OeeStandardTest extends TestCase
         $this->assertTrue(Schema::hasColumns('oee_standards', [
             'product_id',
             'machine_id',
+            'process_type',
+            'output_unit',
+            'planned_time_minutes',
+            'theoretical_output',
+            'ideal_cycle_time_minutes_per_unit',
             'theoretical_output_kg',
             'ideal_cycle_time_hours_per_kg',
             'is_active',
         ]));
         $this->assertTrue(Schema::hasColumns('production_sessions', [
+            'process_type',
+            'output_unit',
+            'theoretical_output',
+            'ideal_cycle_time_minutes_per_unit',
+            'total_output',
+            'reject_output',
             'actual_output_kg',
             'theoretical_output_kg',
             'ideal_cycle_time_hours_per_kg',
@@ -69,25 +80,35 @@ class OeeStandardTest extends TestCase
             ->with(['product', 'machine'])
             ->get();
 
-        $this->assertCount(52, $standards);
-        foreach (['Mixing', 'Stripper Indomach', 'Cetak Gylongli 1', 'Cetak Gylongli 2'] as $machineName) {
-            $this->assertCount(13, $standards->where('machine.machine_name', $machineName));
-        }
+        $this->assertCount(72, $standards);
+        $this->assertCount(17, $standards->where('machine.machine_name', 'Mixing'));
+        $this->assertCount(13, $standards->where('machine.machine_name', 'Stripper Indomach'));
+        $this->assertCount(17, $standards->where('machine.machine_name', 'Cetak Gylongli 1'));
+        $this->assertCount(17, $standards->where('machine.machine_name', 'Cetak Gylongli 2'));
+        $this->assertCount(2, $standards->where('machine.machine_name', 'Blister DKPS 1'));
+        $this->assertCount(2, $standards->where('machine.machine_name', 'Blister DKPS 2'));
+        $this->assertCount(4, $standards->where('machine.machine_name', 'Coating Yenchen'));
 
         $find = fn (string $product, string $machine): ?OeeStandard => $standards->first(
             fn (OeeStandard $standard): bool => $standard->product->product_name === $product
                 && $standard->machine->machine_name === $machine
         );
 
-        $this->assertSame('0.0750187547', $find('Alyrenol', 'Mixing')?->ideal_cycle_time_hours_per_kg);
-        $this->assertSame('0.0792393027', $find('Andalut', 'Mixing')?->ideal_cycle_time_hours_per_kg);
-        $this->assertSame('0.1553398058', $find('Andalut', 'Stripper Indomach')?->ideal_cycle_time_hours_per_kg);
-        $this->assertSame('0.0418389910', $find('Andalut', 'Cetak Gylongli 1')?->ideal_cycle_time_hours_per_kg);
-        $this->assertSame('0.0418389910', $find('Andalut', 'Cetak Gylongli 2')?->ideal_cycle_time_hours_per_kg);
-        $this->assertSame('25.235', $find('Novasteron', 'Mixing')?->theoretical_output_kg);
+        $this->assertSame('yield_ratio', $find('Alyrenol', 'Mixing')?->process_type);
+        $this->assertSame('kg', $find('Alyrenol', 'Mixing')?->output_unit);
+        $this->assertSame(480, $find('Alyrenol', 'Mixing')?->planned_time_minutes);
+        $this->assertSame('40.000', $find('Alyrenol', 'Mixing')?->theoretical_output);
+        $this->assertNull($find('Alyrenol', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('unit_cycle', $find('Alyrenol', 'Stripper Indomach')?->process_type);
+        $this->assertSame('strip', $find('Alyrenol', 'Stripper Indomach')?->output_unit);
+        $this->assertSame(960, $find('Alyrenol', 'Stripper Indomach')?->planned_time_minutes);
+        $this->assertSame('0.0125000000', $find('Alyrenol', 'Stripper Indomach')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('0.0004525000', $find('Trinordiol Fase 1', 'Cetak Gylongli 1')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('636000.000', $find('Trinordiol Fase 1', 'Cetak Gylongli 1')?->theoretical_output);
+        $this->assertSame(1140, $find('Pil KB Harmonies', 'Cetak Gylongli 2')?->planned_time_minutes);
+        $this->assertSame('0.0111000000', $find('Pil KB Harmonies', 'Blister DKPS 1')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame(3300, $find('Trinordiol', 'Blister DKPS 2')?->planned_time_minutes);
+        $this->assertSame(1800, $find('Trinordiol Fase 3', 'Coating Yenchen')?->planned_time_minutes);
         $this->assertTrue($standards->every(fn (OeeStandard $standard): bool => $standard->is_active));
-        $this->assertFalse($standards->contains(
-            fn (OeeStandard $standard): bool => str_starts_with($standard->machine->machine_name, 'Blister DKPS')
-        ));
     }
 }

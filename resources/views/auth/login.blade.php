@@ -29,7 +29,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('login') }}" class="space-y-5">
+                    <form method="POST" action="{{ route('login') }}" x-data="{ submitting: false }" @submit="submitting = true" class="space-y-5">
                         @csrf
 
                         <div>
@@ -68,8 +68,9 @@
                             @enderror
                         </div>
 
-                        <button type="submit" class="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-brand-700 px-5 text-sm font-bold text-white transition-colors hover:bg-brand-800 active:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
-                            Masuk
+                        <button type="submit" :disabled="submitting" class="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-brand-700 px-5 text-sm font-bold text-white transition-colors hover:bg-brand-800 active:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
+                            <span x-show="!submitting">Masuk</span>
+                            <span x-cloak x-show="submitting" role="status" aria-live="polite">Sedang masuk...</span>
                         </button>
                     </form>
                 </div>

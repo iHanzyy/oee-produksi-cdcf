@@ -18,6 +18,17 @@
             <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Kontrol Mesin</h1>
         </header>
 
+        <div
+            x-cloak
+            x-show="busy"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            class="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-xl border border-brand-700 bg-white px-4 py-3 text-sm font-bold text-slate-950 shadow-lg sm:inset-x-auto sm:right-6 sm:w-96"
+        >
+            <span x-text="busyMessage">Menyimpan perubahan...</span>
+        </div>
+
 
 
         <!-- Pesan Sukses / Stabilisasi Stasiun -->
@@ -186,9 +197,9 @@
 
                     <!-- Tombol Start Produksi -->
                     <div class="sm:col-span-2 pt-2">
-                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-brand-700 px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60 sm:text-lg">
+                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-brand-700 px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg">
                             <span x-show="!busy">Mulai Produksi</span>
-                            <span x-show="busy">Memulai Sesi...</span>
+                            <span x-cloak x-show="busy">Menyiapkan sesi...</span>
                         </button>
                     </div>
                 </form>
@@ -388,7 +399,7 @@
                                 </button>
                                 <button type="submit" :disabled="busy" class="min-h-[54px] rounded-xl bg-emerald-700 px-8 py-3.5 text-base sm:text-lg font-bold text-white shadow-md hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2 disabled:opacity-60 transition-all flex items-center justify-center gap-2">
                                     <span x-show="!busy">Mulai Mesin</span>
-                                    <span x-show="busy">Memulai Mesin...</span>
+                                    <span x-cloak x-show="busy">Menjalankan mesin...</span>
                                 </button>
                             </div>
                         </form>
@@ -427,8 +438,24 @@
                             <dd class="mt-1 text-base font-bold text-red-700" x-text="duration(session?.summary.totalDowntimeSeconds)"></dd>
                         </div>
                         <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Output Aktual (kg)</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatOutput(session?.oee?.actualOutputKg)"></dd>
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Total Output</dt>
+                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatOutput(session?.oee?.totalOutput)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Reject</dt>
+                            <dd class="mt-1 text-base font-bold text-red-700 tabular-nums" x-text="formatOutput(session?.oee?.rejectOutput)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Good Output</dt>
+                            <dd class="mt-1 text-base font-bold text-emerald-800 tabular-nums" x-text="formatOutput(session?.oee?.goodOutput)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Planned Production Time</dt>
+                            <dd class="mt-1 text-base font-bold text-slate-900" x-text="duration((session?.oee?.plannedTimeMinutes ?? 0) * 60)"></dd>
+                        </div>
+                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Operating Time</dt>
+                            <dd class="mt-1 text-base font-bold text-slate-900" x-text="duration(session?.oee?.operatingTimeSeconds)"></dd>
                         </div>
                         <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
                             <dt class="text-xs font-bold uppercase text-emerald-800">Availability</dt>
@@ -465,21 +492,44 @@
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
                 <h3 class="text-xl font-bold text-slate-900" x-text="confirmTitle"></h3>
                 <p class="mt-2 text-base text-slate-600 leading-relaxed" x-text="confirmMessage"></p>
-                <div x-show="confirmAction === 'finish'" class="mt-4">
-                    <label for="actual_output_kg" class="block text-sm font-bold text-slate-800">
-                        Output Aktual (kg) <span class="text-red-600">*</span>
-                    </label>
-                    <input
-                        id="actual_output_kg"
-                        x-model="actualOutputKg"
-                        type="number"
-                        step="0.001"
-                        min="0"
-                        inputmode="decimal"
-                        required
-                        class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-brand-700 focus:ring-brand-700"
-                        placeholder="Contoh: 35.5"
-                    >
+                <div x-show="confirmAction === 'finish'" class="mt-4 space-y-4">
+                    <div>
+                        <label for="total_output" class="block text-sm font-bold text-slate-800">
+                            Total Output (<span x-text="outputUnitLabel"></span>) <span class="text-red-600">*</span>
+                        </label>
+                        <input
+                            id="total_output"
+                            x-model="totalOutput"
+                            type="number"
+                            :step="outputStep"
+                            min="0"
+                            inputmode="decimal"
+                            required
+                            class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-brand-700 focus:ring-brand-700"
+                            placeholder="Masukkan seluruh output"
+                        >
+                    </div>
+                    <div>
+                        <label for="reject_output" class="block text-sm font-bold text-slate-800">
+                            Reject (<span x-text="outputUnitLabel"></span>) <span class="text-red-600">*</span>
+                        </label>
+                        <input
+                            id="reject_output"
+                            x-model="rejectOutput"
+                            type="number"
+                            :step="outputStep"
+                            min="0"
+                            :max="totalOutput"
+                            inputmode="decimal"
+                            required
+                            class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-brand-700 focus:ring-brand-700"
+                            placeholder="Masukkan output reject"
+                        >
+                    </div>
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4" aria-live="polite">
+                        <p class="text-xs font-bold uppercase tracking-wide text-emerald-800">Good Output</p>
+                        <p class="mt-1 text-lg font-black text-emerald-950 tabular-nums" x-text="formatOutput(goodOutput)"></p>
+                    </div>
                 </div>
                 <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
                     <button type="button" @click="cancelConfirm" class="min-h-[48px] rounded-xl border border-slate-300 px-5 py-2.5 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-colors">

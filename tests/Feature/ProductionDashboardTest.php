@@ -18,6 +18,22 @@ class ProductionDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_slow_actions_show_clear_accessible_loading_feedback(): void
+    {
+        $dashboard = file_get_contents(resource_path('views/dashboard.blade.php'));
+        $login = file_get_contents(resource_path('views/auth/login.blade.php'));
+        $history = file_get_contents(resource_path('views/history.blade.php'));
+        $script = file_get_contents(resource_path('js/app.js'));
+
+        $this->assertStringContainsString('x-show="busy"', $dashboard);
+        $this->assertStringContainsString('role="status"', $dashboard);
+        $this->assertStringContainsString('x-text="busyMessage"', $dashboard);
+        $this->assertStringContainsString('Menyiapkan sesi produksi...', $script);
+        $this->assertStringContainsString('Menyelesaikan sesi produksi...', $script);
+        $this->assertStringContainsString('Sedang masuk...', $login);
+        $this->assertStringContainsString('Memuat riwayat...', $history);
+    }
+
     public function test_confirmation_actions_are_not_stored_as_alpine_auto_evaluated_functions(): void
     {
         $script = file_get_contents(resource_path('js/app.js'));
@@ -73,22 +89,32 @@ class ProductionDashboardTest extends TestCase
             ->assertDontSee('98.0%')
             ->assertDontSee('DATA DUMMY')
             ->assertDontSee('Belum terhubung ke data mesin atau input produksi.')
-            ->assertSee('Output Aktual (kg)')
-            ->assertSee('id="actual_output_kg"', false)
-            ->assertSee('x-model="actualOutputKg"', false)
+            ->assertSee('Total Output')
+            ->assertSee('Reject')
+            ->assertSee('Good Output')
+            ->assertSee('id="total_output"', false)
+            ->assertSee('id="reject_output"', false)
+            ->assertSee('x-model="totalOutput"', false)
+            ->assertSee('x-model="rejectOutput"', false)
+            ->assertSee('outputUnitLabel', false)
+            ->assertSee('goodOutput', false)
             ->assertSee('Availability')
             ->assertSee('Quality')
             ->assertSee('Performance')
             ->assertSee('OEE')
             ->assertSee('Peringatan')
-            ->assertSee('formatOutput(session?.oee?.actualOutputKg)', false)
+            ->assertSee('formatOutput(session?.oee?.totalOutput)', false)
+            ->assertSee('formatOutput(session?.oee?.rejectOutput)', false)
+            ->assertSee('formatOutput(session?.oee?.goodOutput)', false)
             ->assertSee('formatPercent(session?.oee?.availabilityPercent)', false)
             ->assertSee('formatPercent(session?.oee?.qualityPercent)', false)
             ->assertSee('formatPercent(session?.oee?.performancePercent)', false)
             ->assertSee('formatPercent(session?.oee?.oeePercent)', false);
 
         $script = file_get_contents(resource_path('js/app.js'));
-        $this->assertStringContainsString('actual_output_kg', $script);
+        $this->assertStringContainsString('total_output', $script);
+        $this->assertStringContainsString('reject_output', $script);
+        $this->assertStringContainsString('goodOutput', $script);
         $this->assertStringContainsString('canConfirm()', $script);
     }
 

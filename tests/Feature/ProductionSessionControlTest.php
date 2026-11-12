@@ -32,6 +32,10 @@ class ProductionSessionControlTest extends TestCase
         OeeStandard::create([
             'product_id' => $product->id,
             'machine_id' => $machine->id,
+            'process_type' => 'yield_ratio',
+            'output_unit' => 'kg',
+            'planned_time_minutes' => 480,
+            'theoretical_output' => 40,
             'theoretical_output_kg' => 40,
             'ideal_cycle_time_hours_per_kg' => 0.075,
             'is_active' => false,
@@ -254,7 +258,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
+                ->postJson(route('machine.end', $session), ['confirmed' => true, 'total_output' => 35, 'reject_output' => 0])
                 ->assertStatus(429)
                 ->assertJsonPath('message', 'Sesi baru dimulai. Tunggu 3 detik sebelum menyelesaikan produksi.');
 
@@ -266,7 +270,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
+                ->postJson(route('machine.end', $session), ['confirmed' => true, 'total_output' => 35, 'reject_output' => 0])
                 ->assertOk()
                 ->assertJsonPath('data.status', 'completed');
         } finally {
@@ -296,7 +300,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session), ['actual_output_kg' => 35])
+                ->postJson(route('machine.end', $session), ['total_output' => 35, 'reject_output' => 0])
                 ->assertStatus(422)
                 ->assertJsonPath('message', 'Konfirmasi selesai produksi tidak diterima. Muat ulang halaman lalu coba lagi.');
 
@@ -305,7 +309,7 @@ class ProductionSessionControlTest extends TestCase
             $this->actingAs($operator)
                 ->withCredentials()
                 ->withCookie('device_token', $token)
-                ->postJson(route('machine.end', $session), ['confirmed' => true, 'actual_output_kg' => 35])
+                ->postJson(route('machine.end', $session), ['confirmed' => true, 'total_output' => 35, 'reject_output' => 0])
                 ->assertOk()
                 ->assertJsonPath('data.status', 'completed');
         } finally {
@@ -329,6 +333,10 @@ class ProductionSessionControlTest extends TestCase
         OeeStandard::create([
             'product_id' => $product->id,
             'machine_id' => $machine->id,
+            'process_type' => 'yield_ratio',
+            'output_unit' => 'kg',
+            'planned_time_minutes' => 480,
+            'theoretical_output' => 40,
             'theoretical_output_kg' => 40,
             'ideal_cycle_time_hours_per_kg' => 0.075,
         ]);
