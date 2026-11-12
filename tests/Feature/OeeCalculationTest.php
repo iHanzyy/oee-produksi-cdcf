@@ -24,7 +24,7 @@ class OeeCalculationTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_completion_stores_snapshot_and_excludes_downtime_from_operation_time(): void
+    public function test_completion_stores_accumulated_running_time_as_realtime_process(): void
     {
         Carbon::setTestNow('2026-11-09 08:00:00');
         [$operator, $session, $standard, $token] = $this->startProductionSession();
@@ -115,6 +115,32 @@ class OeeCalculationTest extends TestCase
             ->assertJsonPath('data.oee.oeePercent', 88.898);
     }
 
+    public function test_kg_output_accepts_decimal_comma(): void
+    {
+        Carbon::setTestNow('2026-11-09 08:00:00');
+        [$operator, $session, , $token] = $this->startProductionSession([
+            'process_type' => 'yield_ratio',
+            'output_unit' => 'kg',
+            'theoretical_output' => 40,
+            'ideal_cycle_time_minutes_per_unit' => null,
+        ]);
+        Carbon::setTestNow('2026-11-09 16:00:00');
+
+        $this->postAsBrowser($operator, $token, route('machine.end', $session), [
+            'confirmed' => true,
+            'total_output' => '35,5',
+            'reject_output' => '1,25',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.oee.totalOutput', 35.5)
+            ->assertJsonPath('data.oee.rejectOutput', 1.25)
+            ->assertJsonPath('data.oee.goodOutput', 34.25);
+
+        $session->refresh();
+        $this->assertSame('35.500', $session->total_output);
+        $this->assertSame('1.250', $session->reject_output);
+    }
+
     public function test_completion_accepts_zero_output(): void
     {
         Carbon::setTestNow('2026-11-09 08:00:00');
@@ -198,26 +224,33 @@ class OeeCalculationTest extends TestCase
         $this->assertNull($session->total_output);
     }
 
-    public function test_completion_rejects_downtime_that_exceeds_planned_time(): void
+    public function test_completion_excludes_paused_downtime_from_realtime_process(): void
     {
         Carbon::setTestNow('2026-11-09 08:00:00');
-        [$operator, $session, , $token] = $this->startProductionSession(['planned_time_minutes' => 60]);
+        [$operator, $session, , $token] = $this->startProductionSession([
+            'theoretical_output' => 140000,
+            'ideal_cycle_time_minutes_per_unit' => 0.0004525,
+        ]);
 
-        Carbon::setTestNow('2026-11-09 08:30:00');
+        Carbon::setTestNow('2026-11-09 09:00:00');
         $this->postAsBrowser($operator, $token, route('machine.stop', $session))->assertOk();
-        Carbon::setTestNow('2026-11-09 10:00:00');
+        Carbon::setTestNow('2026-11-09 09:30:00');
         $this->postAsBrowser($operator, $token, route('machine.resume', $session), $this->downtimeDetails())->assertOk();
-        Carbon::setTestNow('2026-11-09 10:00:03');
+        Carbon::setTestNow('2026-11-09 10:00:00');
 
         $this->postAsBrowser($operator, $token, route('machine.end', $session), [
             'confirmed' => true,
-            'total_output' => 100,
-            'reject_output' => 0,
+            'total_output' => 140000,
+            'reject_output' => 10000,
         ])
-            ->assertUnprocessable()
-            ->assertJsonPath('message', 'Waktu operasi produksi harus lebih dari 0 menit.');
+            ->assertOk()
+            ->assertJsonPath('data.oee.operatingTimeSeconds', 5400)
+            ->assertJsonPath('data.oee.availabilityPercent', 18.75)
+            ->assertJsonPath('data.oee.performancePercent', 70.3889)
+            ->assertJsonPath('data.oee.qualityPercent', 92.8571)
+            ->assertJsonPath('data.oee.oeePercent', 12.2552);
 
-        $this->assertSame('running', $session->fresh()->status);
+        $this->assertSame(5400, $session->fresh()->operating_time_seconds);
     }
 
     private function startProductionSession(array $standardOverrides = []): array

@@ -6,6 +6,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class CompleteProductionSessionRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        foreach (['total_output', 'reject_output'] as $field) {
+            if (is_string($this->input($field))) {
+                $this->merge([$field => str_replace(',', '.', trim($this->input($field)))]);
+            }
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -16,6 +25,7 @@ class CompleteProductionSessionRequest extends FormRequest
         return [
             'total_output' => ['required', 'numeric', 'min:0', 'max:999999999999.999'],
             'reject_output' => ['required', 'numeric', 'min:0', 'max:999999999999.999', 'lte:total_output'],
+            'client_time' => ['nullable', 'date'],
         ];
     }
 

@@ -5,7 +5,10 @@ window.Alpine = Alpine;
 Alpine.data('productionControl', (config) => ({
     session: config.initial.data,
     isController: config.initial.isController,
-    clockOffsetMs: config.initial?.serverNow ? Date.parse(config.initial.serverNow) - Date.now() : 0,
+    // shortcut: test mode accepts device timestamps; keep disabled outside temporary QA.
+    clockOffsetMs: config.deviceClockTestMode
+        ? 0
+        : (config.initial?.serverNow ? Date.parse(config.initial.serverNow) - Date.now() : 0),
     areas: config.areas,
     categories: config.categories,
     personnels: config.personnels,
@@ -43,16 +46,28 @@ Alpine.data('productionControl', (config) => ({
     lastActionTime: 0,
     pollTimer: null,
     clockTimer: null,
+    wakeHandler: null,
 
     init() {
         this.updateElapsed();
         this.clockTimer = window.setInterval(() => this.updateElapsed(), 1000);
         this.pollTimer = window.setInterval(() => this.poll(), 5000);
+        this.wakeHandler = () => {
+            if (document.hidden) return;
+            this.updateElapsed();
+            this.poll();
+        };
+        document.addEventListener('visibilitychange', this.wakeHandler);
+        window.addEventListener('pageshow', this.wakeHandler);
+        window.addEventListener('focus', this.wakeHandler);
     },
 
     destroy() {
         window.clearInterval(this.clockTimer);
         window.clearInterval(this.pollTimer);
+        document.removeEventListener('visibilitychange', this.wakeHandler);
+        window.removeEventListener('pageshow', this.wakeHandler);
+        window.removeEventListener('focus', this.wakeHandler);
     },
 
     nowMs() {
@@ -72,11 +87,15 @@ Alpine.data('productionControl', (config) => ({
     },
 
     get goodOutput() {
-        const total = Number(this.totalOutput);
-        const reject = Number(this.rejectOutput);
+        const total = this.parseOutput(this.totalOutput);
+        const reject = this.parseOutput(this.rejectOutput);
         if (String(this.totalOutput).trim() === '' || String(this.rejectOutput).trim() === '') return null;
         if (!Number.isFinite(total) || !Number.isFinite(reject) || reject > total) return null;
         return total - reject;
+    },
+
+    parseOutput(value) {
+        return Number(String(value ?? '').trim().replace(',', '.'));
     },
 
     get selectedArea() {
@@ -237,11 +256,11 @@ Alpine.data('productionControl', (config) => ({
         const reject = String(this.rejectOutput ?? '').trim();
         return total !== ''
             && reject !== ''
-            && Number.isFinite(Number(total))
-            && Number.isFinite(Number(reject))
-            && Number(total) >= 0
-            && Number(reject) >= 0
-            && Number(reject) <= Number(total);
+            && Number.isFinite(this.parseOutput(total))
+            && Number.isFinite(this.parseOutput(reject))
+            && this.parseOutput(total) >= 0
+            && this.parseOutput(reject) >= 0
+            && this.parseOutput(reject) <= this.parseOutput(total);
     },
 
     cancelConfirm() {
@@ -328,8 +347,8 @@ Alpine.data('productionControl', (config) => ({
 
         await this.mutate(`${config.urls.base}/${this.session.id}/complete-confirmed`, {
             confirmed: true,
-            total_output: Number(this.totalOutput),
-            reject_output: Number(this.rejectOutput),
+            total_output: this.parseOutput(this.totalOutput),
+            reject_output: this.parseOutput(this.rejectOutput),
         }, 'Menyelesaikan sesi produksi...');
     },
 
@@ -349,10 +368,6 @@ Alpine.data('productionControl', (config) => ({
 
     async poll() {
         if (this.busy || this.confirmAction || this.showDowntimeForm || this.productMenuOpen || this.machineMenuOpen) {
-            return;
-        }
-
-        if (typeof document !== 'undefined' && document.hidden) {
             return;
         }
 
@@ -379,6 +394,9 @@ Alpine.data('productionControl', (config) => ({
         this.error = '';
 
         try {
+            const requestBody = config.deviceClockTestMode
+                ? { ...body, client_time: new Date().toISOString() }
+                : body;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -386,7 +404,7 @@ Alpine.data('productionControl', (config) => ({
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 },
-                body: JSON.stringify(body),
+                body: JSON.stringify(requestBody),
             });
 
             let payload = null;
@@ -406,9 +424,7 @@ Alpine.data('productionControl', (config) => ({
                     : null;
                 const message = firstFieldError
                     || payload?.message
-                    || (response.status === 419
-                        ? 'Halaman sudah terlalu lama dibuka. Muat ulang halaman lalu coba lagi.'
-                        : 'Permintaan belum bisa diproses. Coba lagi.');
+                    || 'Permintaan belum bisa diproses. Coba lagi.';
                 this.error = message;
                 this.formError = message;
                 this.showAlert(message, 'Pemberitahuan Sistem');
@@ -431,7 +447,7 @@ Alpine.data('productionControl', (config) => ({
     },
 
     apply(payload) {
-        if (payload?.serverNow) {
+        if (!config.deviceClockTestMode && payload?.serverNow) {
             this.clockOffsetMs = Date.parse(payload.serverNow) - Date.now();
         }
 
@@ -458,6 +474,8 @@ Alpine.data('productionControl', (config) => ({
             this.session.oee = payload.data.oee;
             this.session.endTime = payload.data.endTime;
         }
+
+        this.updateElapsed();
     },
 
     updateElapsed() {
@@ -468,10 +486,14 @@ Alpine.data('productionControl', (config) => ({
         }
 
         const now = this.nowMs();
-        const end = this.session.endTime ? Date.parse(this.session.endTime) : now;
-        const totalSeconds = Math.max(0, Math.floor((end - Date.parse(this.session.startTime)) / 1000));
+        const accumulatedRunningSeconds = Number(this.session.summary?.accumulatedRunningSeconds ?? 0);
         const previousDowntimeSeconds = Number(this.session.summary?.totalDowntimeSeconds ?? 0);
+        let activeRunningSeconds = 0;
         let activeDowntimeSeconds = 0;
+
+        if (this.session.status === 'running' && this.session.summary?.runningSince) {
+            activeRunningSeconds = Math.max(0, Math.floor((now - Date.parse(this.session.summary.runningSince)) / 1000));
+        }
 
         if (this.session.status === 'downtime' && this.session.downtime?.stopTime) {
             activeDowntimeSeconds = Math.max(0, Math.floor((now - Date.parse(this.session.downtime.stopTime)) / 1000));
@@ -480,7 +502,7 @@ Alpine.data('productionControl', (config) => ({
             this.downtimeElapsed = '00:00:00';
         }
 
-        this.elapsed = this.formatSeconds(Math.max(0, totalSeconds - previousDowntimeSeconds - activeDowntimeSeconds));
+        this.elapsed = this.formatSeconds(accumulatedRunningSeconds + activeRunningSeconds);
     },
 
     formatSeconds(seconds) {

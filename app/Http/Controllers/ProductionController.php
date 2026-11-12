@@ -54,8 +54,9 @@ class ProductionController extends Controller
     {
         $validated = $request->validated();
         $controllerHash = $this->controllerHash($request);
+        $startTime = $this->eventTime($request);
 
-        $session = DB::transaction(function () use ($validated, $controllerHash): ProductionSession {
+        $session = DB::transaction(function () use ($validated, $controllerHash, $startTime): ProductionSession {
             abort_if(
                 ProductionSession::query()->where('controller_token_hash', $controllerHash)->exists(),
                 409,
@@ -93,8 +94,9 @@ class ProductionController extends Controller
                 'operator_id' => null,
                 'operator_name' => $validated['operator_name'],
                 'controller_token_hash' => $controllerHash,
-                'start_time' => now(),
+                'start_time' => $startTime,
                 'planned_time_minutes' => $standard->planned_time_minutes,
+                'operating_time_seconds' => 0,
                 'status' => 'running',
             ]);
         });
@@ -166,43 +168,44 @@ class ProductionController extends Controller
 
     public function stopMachine(Request $request, ProductionSession $productionSession): JsonResponse
     {
-        $session = DB::transaction(function () use ($request, $productionSession): ProductionSession {
+        $request->validate(['client_time' => ['nullable', 'date']]);
+        $stopTime = $this->eventTime($request);
+
+        $session = DB::transaction(function () use ($request, $productionSession, $stopTime): ProductionSession {
             $lockedSession = ProductionSession::query()->lockForUpdate()->findOrFail($productionSession->id);
             $this->assertController($lockedSession, $request);
             abort_unless($lockedSession->status === 'running', 409, 'Mesin sedang tidak berjalan.');
+            abort_if($stopTime->lessThan($lockedSession->start_time), 422, 'Waktu HP lebih awal dari waktu mulai produksi.');
+
+            $lastGoTime = DowntimeLog::query()
+                ->where('production_session_id', $lockedSession->id)
+                ->whereNotNull('go_time')
+                ->latest('id')
+                ->value('go_time');
+            $runningSince = $lastGoTime ? Carbon::parse($lastGoTime) : Carbon::parse($lockedSession->start_time);
+            abort_if($stopTime->lessThan($runningSince), 422, 'Waktu HP lebih awal dari waktu mesin dijalankan.');
 
             // Proteksi backend: cegah stop mesin dalam waktu 2 detik setelah resume untuk mencegah loop downtime
             if (! app()->runningUnitTests()) {
-                $lastGoLog = DowntimeLog::query()
-                    ->where('production_session_id', $lockedSession->id)
-                    ->whereNotNull('go_time')
-                    ->latest('id')
-                    ->first();
-
-                if ($lastGoLog && $lastGoLog->go_time) {
-                    $secondsSinceResume = Carbon::parse($lastGoLog->go_time)->diffInSeconds(now());
-                    abort_if(
-                        $secondsSinceResume < 3,
-                        429,
-                        'Mesin baru saja dinyalakan. Tunggu beberapa detik sebelum menghentikan mesin lagi.'
-                    );
-                }
-
-                if ($lockedSession->start_time) {
-                    $secondsSinceStart = Carbon::parse($lockedSession->start_time)->diffInSeconds(now());
-                    abort_if(
-                        $secondsSinceStart < 2,
-                        429,
-                        'Mesin baru saja dimulai. Tunggu beberapa detik sebelum menghentikan mesin.'
-                    );
-                }
+                $secondsSinceRunning = $runningSince->diffInSeconds($stopTime);
+                abort_if(
+                    $secondsSinceRunning < ($lastGoTime ? 3 : 2),
+                    429,
+                    $lastGoTime
+                        ? 'Mesin baru saja dinyalakan. Tunggu beberapa detik sebelum menghentikan mesin lagi.'
+                        : 'Mesin baru saja dimulai. Tunggu beberapa detik sebelum menghentikan mesin.'
+                );
             }
 
             DowntimeLog::create([
                 'production_session_id' => $lockedSession->id,
-                'stop_time' => now(),
+                'stop_time' => $stopTime,
             ]);
-            $lockedSession->update(['status' => 'downtime']);
+            $lockedSession->update([
+                'status' => 'downtime',
+                'operating_time_seconds' => (int) ($lockedSession->operating_time_seconds ?? 0)
+                    + (int) $runningSince->diffInSeconds($stopTime),
+            ]);
 
             return $lockedSession;
         });
@@ -225,7 +228,8 @@ class ProductionController extends Controller
                 ->first();
             abort_if($log === null, 409, 'Data kendala mesin tidak ditemukan. Muat ulang halaman lalu coba lagi.');
 
-            $goTime = now();
+            $goTime = $this->eventTime($request);
+            abort_if($goTime->lessThan($log->stop_time), 422, 'Waktu HP lebih awal dari waktu mulai downtime.');
             $log->update([
                 'go_time' => $goTime,
                 'duration_seconds' => (int) Carbon::parse($log->stop_time)->diffInSeconds($goTime),
@@ -265,12 +269,20 @@ class ProductionController extends Controller
             abort_if($lockedSession->status === 'downtime', 409, 'Selesaikan downtime terlebih dahulu.');
             abort_unless($lockedSession->status === 'running', 409, 'Sesi produksi sudah selesai.');
 
-            $endTime = now();
+            $endTime = $this->eventTime($request);
+            abort_if($endTime->lessThan($lockedSession->start_time), 422, 'Waktu HP lebih awal dari waktu mulai produksi.');
             $lastResumeTime = DowntimeLog::query()
                 ->where('production_session_id', $lockedSession->id)
                 ->whereNotNull('go_time')
                 ->latest('id')
                 ->value('go_time');
+            abort_if(
+                $lastResumeTime && $endTime->lessThan(Carbon::parse($lastResumeTime)),
+                422,
+                'Waktu HP lebih awal dari waktu mesin dijalankan.'
+            );
+
+            $runningSince = $lastResumeTime ? Carbon::parse($lastResumeTime) : Carbon::parse($lockedSession->start_time);
             abort_if(
                 $lastResumeTime && Carbon::parse($lastResumeTime)->diffInSeconds($endTime) < 3,
                 429,
@@ -299,26 +311,23 @@ class ProductionController extends Controller
                 'Standar OEE belum tersedia untuk produk dan mesin ini.',
             );
 
-            $closedDowntimeSeconds = (int) DowntimeLog::query()
-                ->where('production_session_id', $lockedSession->id)
-                ->whereNotNull('go_time')
-                ->sum('duration_seconds');
             $plannedTimeSeconds = (int) $lockedSession->planned_time_minutes * 60;
-            $operatingTimeSeconds = $plannedTimeSeconds - $closedDowntimeSeconds;
-            abort_if($operatingTimeSeconds <= 0, 422, 'Waktu operasi produksi harus lebih dari 0 menit.');
+            $realtimeProcessSeconds = (int) ($lockedSession->operating_time_seconds ?? 0)
+                + (int) $runningSince->diffInSeconds($endTime);
+            abort_if($realtimeProcessSeconds <= 0, 422, 'Realtime proses produksi harus lebih dari 0 menit.');
 
             // ponytail: inline OEE math because completion is the only calculation point; extract only if reused.
             $totalOutput = (float) $validated['total_output'];
             $rejectOutput = (float) $validated['reject_output'];
             $goodOutput = $totalOutput - $rejectOutput;
-            $operatingTimeMinutes = $operatingTimeSeconds / 60;
-            $availabilityPercent = $operatingTimeSeconds / $plannedTimeSeconds * 100;
+            $realtimeProcessMinutes = $realtimeProcessSeconds / 60;
+            $availabilityPercent = $realtimeProcessSeconds / $plannedTimeSeconds * 100;
             $qualityPercent = $totalOutput > 0 ? $goodOutput / $totalOutput * 100 : 0;
             $performancePercent = match ($standard->process_type) {
                 'unit_cycle' => (float) $standard->ideal_cycle_time_minutes_per_unit
-                    * $totalOutput / $operatingTimeMinutes * 100,
+                    * $totalOutput / $realtimeProcessMinutes * 100,
                 'yield_ratio' => $totalOutput > 0
-                    ? $operatingTimeMinutes * $goodOutput / ($operatingTimeMinutes * $totalOutput) * 100
+                    ? $realtimeProcessMinutes * $goodOutput / ($realtimeProcessMinutes * $totalOutput) * 100
                     : 0,
             };
             $oeePercent = $availabilityPercent * $qualityPercent * $performancePercent / 10000;
@@ -332,7 +341,7 @@ class ProductionController extends Controller
                 'ideal_cycle_time_minutes_per_unit' => $standard->ideal_cycle_time_minutes_per_unit,
                 'total_output' => $validated['total_output'],
                 'reject_output' => $validated['reject_output'],
-                'operating_time_seconds' => $operatingTimeSeconds,
+                'operating_time_seconds' => $realtimeProcessSeconds,
                 'availability_percent' => $availabilityPercent,
                 'quality_percent' => $qualityPercent,
                 'performance_percent' => $performancePercent,
@@ -368,6 +377,15 @@ class ProductionController extends Controller
         );
     }
 
+    private function eventTime(Request $request): Carbon
+    {
+        if (! config('app.device_clock_test_mode') || ! $request->filled('client_time')) {
+            return now();
+        }
+
+        return Carbon::parse((string) $request->input('client_time'))->utc();
+    }
+
     private function assertController(ProductionSession $session, Request $request): void
     {
         abort_unless(
@@ -399,14 +417,15 @@ class ProductionController extends Controller
             : null;
         $activeDowntime = $session->downtimeLogs->firstWhere('go_time', null);
         $closedDowntimes = $session->downtimeLogs->whereNotNull('go_time');
-        $elapsedSeconds = $session->start_time
-            ? (int) $session->start_time->diffInSeconds($session->end_time ?? now())
-            : 0;
+        $lastGoTime = $closedDowntimes->sortByDesc('id')->first()?->go_time;
+        $runningSince = $session->status === 'running'
+            ? Carbon::parse($lastGoTime ?? $session->start_time)
+            : null;
+        $accumulatedRunningSeconds = (int) ($session->operating_time_seconds ?? 0);
         $totalDowntimeSeconds = (int) $closedDowntimes->sum('duration_seconds');
-        $activeDowntimeSeconds = $activeDowntime
-            ? (int) Carbon::parse($activeDowntime->stop_time)->diffInSeconds(now())
-            : 0;
-        $totalDurationSeconds = max(0, $elapsedSeconds - $totalDowntimeSeconds - $activeDowntimeSeconds);
+        $totalDurationSeconds = $accumulatedRunningSeconds + ($runningSince
+            ? max(0, (int) $runningSince->diffInSeconds(now(), false))
+            : 0);
 
         return [
             'id' => $session->id,
@@ -433,6 +452,8 @@ class ProductionController extends Controller
             ] : null,
             'summary' => [
                 'totalDurationSeconds' => $totalDurationSeconds,
+                'accumulatedRunningSeconds' => $accumulatedRunningSeconds,
+                'runningSince' => $runningSince?->timezone('Asia/Jakarta')->toIso8601String(),
                 'hadDowntime' => $session->downtimeLogs->isNotEmpty(),
                 'downtimeCount' => $session->downtimeLogs->count(),
                 'totalDowntimeSeconds' => $totalDowntimeSeconds,

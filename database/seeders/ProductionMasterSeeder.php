@@ -17,10 +17,10 @@ class ProductionMasterSeeder extends Seeder
         $masters = [
             'Tablet Hormon' => [
                 'products' => [
-                    'Novasteron', 'Meprolut', 'Norelut', 'Etiro-N', 'Norethisterone Tab 5 mg',
+                    'Novasterone', 'Meprolut', 'Norelut', 'Etiro-N', 'Norethisterone',
                     'Luteron', 'Andalut', 'Bifertil', 'Provula', 'Ovulas', 'Ovulet', 'Clomifil',
                     'Alyrenol', 'Progeston', 'Pregnolin', 'Obstanon', 'Prestrenol', 'Maxinor',
-                    'Prinolas', 'Pil KB Harmonies', 'Trinordiol', 'Trinordiol Fase 1',
+                    'Prinolas', 'Pil KB Harmonis', 'Trinordiol', 'Trinordiol Fase 1',
                     'Trinordiol Fase 2', 'Trinordiol Fase 3', 'Dienogest',
                 ],
                 'machines' => [
@@ -49,6 +49,12 @@ class ProductionMasterSeeder extends Seeder
         foreach ($masters as $areaName => $master) {
             $area = Area::firstOrCreate(['area_name' => $areaName]);
 
+            if ($areaName === 'Tablet Hormon') {
+                Product::where('area_id', $area->id)->where('product_name', 'Novasteron')->update(['product_name' => 'Novasterone']);
+                Product::where('area_id', $area->id)->where('product_name', 'Norethisterone Tab 5 mg')->update(['product_name' => 'Norethisterone']);
+                Product::where('area_id', $area->id)->where('product_name', 'Pil KB Harmonies')->update(['product_name' => 'Pil KB Harmonis']);
+            }
+
             Product::where('area_id', $area->id)->update(['is_active' => false]);
             Machine::where('area_id', $area->id)->update(['is_active' => false]);
 
@@ -71,22 +77,23 @@ class ProductionMasterSeeder extends Seeder
 
         $standardGroups = [
             ['products' => ['Alyrenol', 'Pregnolin', 'Progeston', 'Prestrenol'], 'machines' => ['Stripper Indomach'], 'process_type' => 'unit_cycle', 'output_unit' => 'strip', 'theoretical_output' => 20000, 'ideal_cycle_time_minutes_per_unit' => '0.0125', 'planned_time_minutes' => 960],
-            ['products' => ['Bifertil', 'Provula', 'Novasteron', 'Norelut', 'Meprolut', 'Luteron', 'Norethisterone Tab 5 mg', 'Etiro-N', 'Andalut'], 'machines' => ['Stripper Indomach'], 'process_type' => 'unit_cycle', 'output_unit' => 'strip', 'theoretical_output' => 14000, 'ideal_cycle_time_minutes_per_unit' => '0.0125', 'planned_time_minutes' => 480],
+            ['products' => ['Bifertil', 'Provula', 'Novasterone', 'Norelut', 'Meprolut', 'Luteron', 'Norethisterone', 'Etiro-N', 'Andalut'], 'machines' => ['Stripper Indomach'], 'process_type' => 'unit_cycle', 'output_unit' => 'strip', 'theoretical_output' => 14000, 'ideal_cycle_time_minutes_per_unit' => '0.0125', 'planned_time_minutes' => 480],
             ['products' => ['Alyrenol', 'Pregnolin', 'Progeston', 'Prestrenol'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 200000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 480],
-            ['products' => ['Bifertil', 'Provula', 'Novasteron', 'Norelut', 'Meprolut', 'Luteron', 'Norethisterone Tab 5 mg', 'Etiro-N', 'Andalut'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 140000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 480],
+            ['products' => ['Bifertil', 'Provula', 'Novasterone', 'Norelut', 'Meprolut', 'Luteron', 'Norethisterone', 'Etiro-N', 'Andalut'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 140000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 480],
             ['products' => ['Trinordiol Fase 1'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 636000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 660],
-            ['products' => ['Trinordiol Fase 2', 'Trinordiol Fase 3'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 530000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 660],
-            ['products' => ['Pil KB Harmonies'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 1500000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 1140],
-            ['products' => ['Pil KB Harmonies'], 'machines' => ['Blister DKPS 1', 'Blister DKPS 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'blister', 'theoretical_output' => 71428, 'ideal_cycle_time_minutes_per_unit' => '0.0111', 'planned_time_minutes' => 1980],
+            ['products' => ['Trinordiol Fase 2'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 530000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 660],
+            ['products' => ['Trinordiol Fase 3'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 1060000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 660],
+            ['products' => ['Pil KB Harmonis'], 'machines' => ['Cetak Gylongli 1', 'Cetak Gylongli 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'tablet', 'theoretical_output' => 1500000, 'ideal_cycle_time_minutes_per_unit' => '0.0004525', 'planned_time_minutes' => 1140],
+            ['products' => ['Pil KB Harmonis'], 'machines' => ['Blister DKPS 1', 'Blister DKPS 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'blister', 'theoretical_output' => 71428, 'ideal_cycle_time_minutes_per_unit' => '0.0111', 'planned_time_minutes' => 1980],
             ['products' => ['Trinordiol'], 'machines' => ['Blister DKPS 1', 'Blister DKPS 2'], 'process_type' => 'unit_cycle', 'output_unit' => 'blister', 'theoretical_output' => 106000, 'ideal_cycle_time_minutes_per_unit' => '0.01667', 'planned_time_minutes' => 3300],
             ['products' => ['Alyrenol', 'Pregnolin', 'Progeston', 'Prestrenol'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 40, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 480],
             ['products' => ['Bifertil', 'Provula'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 25.55, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 480],
-            ['products' => ['Novasteron', 'Norelut', 'Meprolut', 'Luteron', 'Norethisterone Tab 5 mg', 'Etiro-N', 'Andalut'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 25.235, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 480],
+            ['products' => ['Novasterone', 'Norelut', 'Meprolut', 'Luteron', 'Norethisterone', 'Etiro-N', 'Andalut'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 25.235, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 480],
             ['products' => ['Trinordiol Fase 1'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 34.98, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 660],
             ['products' => ['Trinordiol Fase 2'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 29.15, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 660],
             ['products' => ['Trinordiol Fase 3'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 58.3, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 660],
-            ['products' => ['Pil KB Harmonies'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 90, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 660],
-            ['products' => ['Pil KB Harmonies'], 'machines' => ['Coating Yenchen'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 90, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 660],
+            ['products' => ['Pil KB Harmonis'], 'machines' => ['Mixing'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 90, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 660],
+            ['products' => ['Pil KB Harmonis'], 'machines' => ['Coating Yenchen'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 90, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 660],
             ['products' => ['Trinordiol Fase 1'], 'machines' => ['Coating Yenchen'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 34.98, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 1320],
             ['products' => ['Trinordiol Fase 2'], 'machines' => ['Coating Yenchen'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 29.15, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 1140],
             ['products' => ['Trinordiol Fase 3'], 'machines' => ['Coating Yenchen'], 'process_type' => 'yield_ratio', 'output_unit' => 'kg', 'theoretical_output' => 58.3, 'ideal_cycle_time_minutes_per_unit' => null, 'planned_time_minutes' => 1800],

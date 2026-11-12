@@ -20,7 +20,7 @@ class ProductionSessionControlTest extends TestCase
     {
         $operator = User::factory()->create(['role' => 'operator']);
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
 
         $this->postStartSession($operator, $this->deviceToken($operator), $area, $product, $machine)
@@ -321,7 +321,7 @@ class ProductionSessionControlTest extends TestCase
     {
         $operator = User::factory()->create(['role' => 'operator']);
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         $this->createStandard($product, $machine);
 

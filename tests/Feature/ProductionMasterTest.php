@@ -16,7 +16,7 @@ class ProductionMasterTest extends TestCase
     public function test_area_exposes_active_products_and_machines(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $activeProduct = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $activeProduct = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         Product::create(['area_id' => $area->id, 'product_name' => 'Produk Lama', 'is_active' => false]);
         $activeMachine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         Machine::create(['area_id' => $area->id, 'machine_name' => 'Mesin Lama', 'is_active' => false]);
@@ -30,11 +30,11 @@ class ProductionMasterTest extends TestCase
     public function test_product_name_must_be_unique_within_an_area(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
 
         $this->expectException(QueryException::class);
 
-        Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
     }
 
     public function test_machine_name_must_be_unique_within_an_area(): void

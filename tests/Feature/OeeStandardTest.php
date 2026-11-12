@@ -105,8 +105,9 @@ class OeeStandardTest extends TestCase
         $this->assertSame('0.0125000000', $find('Alyrenol', 'Stripper Indomach')?->ideal_cycle_time_minutes_per_unit);
         $this->assertSame('0.0004525000', $find('Trinordiol Fase 1', 'Cetak Gylongli 1')?->ideal_cycle_time_minutes_per_unit);
         $this->assertSame('636000.000', $find('Trinordiol Fase 1', 'Cetak Gylongli 1')?->theoretical_output);
-        $this->assertSame(1140, $find('Pil KB Harmonies', 'Cetak Gylongli 2')?->planned_time_minutes);
-        $this->assertSame('0.0111000000', $find('Pil KB Harmonies', 'Blister DKPS 1')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('1060000.000', $find('Trinordiol Fase 3', 'Cetak Gylongli 1')?->theoretical_output);
+        $this->assertSame(1140, $find('Pil KB Harmonis', 'Cetak Gylongli 2')?->planned_time_minutes);
+        $this->assertSame('0.0111000000', $find('Pil KB Harmonis', 'Blister DKPS 1')?->ideal_cycle_time_minutes_per_unit);
         $this->assertSame(3300, $find('Trinordiol', 'Blister DKPS 2')?->planned_time_minutes);
         $this->assertSame(1800, $find('Trinordiol Fase 3', 'Coating Yenchen')?->planned_time_minutes);
         $this->assertTrue($standards->every(fn (OeeStandard $standard): bool => $standard->is_active));

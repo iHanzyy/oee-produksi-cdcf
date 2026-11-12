@@ -217,9 +217,11 @@
                                 $downtimeCount = (int) ($session->downtime_logs_count ?? 0);
                                 $totalDowntimeSeconds = (int) ($session->downtime_logs_sum_duration_seconds ?? 0);
                                 $totalDowntimeMinutesText = rtrim(rtrim(number_format($totalDowntimeSeconds / 60, 1, ',', '.'), '0'), ',') . ' menit';
-                                $sessionDurationSeconds = ($session->start_time && $session->end_time)
-                                    ? max(0, $session->start_time->diffInSeconds($session->end_time))
-                                    : null;
+                                $sessionDurationSeconds = $session->operating_time_seconds !== null
+                                    ? (int) $session->operating_time_seconds
+                                    : (($session->start_time && $session->end_time)
+                                        ? max(0, $session->start_time->diffInSeconds($session->end_time) - $totalDowntimeSeconds)
+                                        : null);
                                 $sessionDurationMinutesText = $sessionDurationSeconds !== null
                                     ? rtrim(rtrim(number_format($sessionDurationSeconds / 60, 1, ',', '.'), '0'), ',') . ' menit'
                                     : '-';

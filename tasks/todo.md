@@ -68,7 +68,7 @@ Source: `docs/specs/SPEC-oee-formulas-and-output.md`
 **Acceptance criteria:**
 
 - [x] Start hanya menerima pasangan produk-mesin dengan standar baru yang valid dan menyalin planned time ke sesi.
-- [x] Completion menolak reject di atas total dan operating time nonpositif; total nol menghasilkan metrik nol tanpa pembagian nol.
+- [x] Completion menolak reject di atas total dan realtime process nonpositif; total nol menghasilkan metrik nol tanpa pembagian nol.
 - [x] Availability, Performance, Quality, OEE, snapshot, dan warning sesuai spec untuk kedua process type.
 
 **Verification:**
@@ -102,7 +102,7 @@ Source: `docs/specs/SPEC-oee-formulas-and-output.md`
 
 - [x] Dialog menampilkan dua input berlabel satuan mesin, Good Output otomatis, dan error yang dapat dibaca.
 - [x] Tombol konfirmasi aktif hanya untuk angka valid dengan reject tidak melebihi total.
-- [x] Ringkasan selesai menampilkan Total, Reject, Good, satuan, planned time, operating time, serta empat metrik OEE.
+- [x] Ringkasan selesai menampilkan Total, Reject, Good, satuan, planned time, Durasi Sesi, serta empat metrik OEE tanpa Waktu Operasi Bersih.
 
 **Verification:**
 
@@ -127,7 +127,7 @@ Source: `docs/specs/SPEC-oee-formulas-and-output.md`
 
 **Acceptance criteria:**
 
-- [x] History baru menampilkan Total, Reject, Good, theoretical output, satuan, planned/operating time, dan metrik OEE.
+- [x] History baru menampilkan Total, Reject, Good, theoretical output, satuan, planned time, Durasi Sesi, dan metrik OEE tanpa Waktu Operasi Bersih.
 - [x] Sesi legacy dengan field generik null tetap terbaca memakai tampilan lama atau tanda `-` yang jujur.
 - [x] Filter, pagination, detail downtime, export, dan perubahan history-detail yang ada tidak berubah perilakunya.
 

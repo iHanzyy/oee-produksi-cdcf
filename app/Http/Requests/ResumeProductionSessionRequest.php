@@ -26,6 +26,7 @@ class ResumeProductionSessionRequest extends FormRequest
             'personnel_id' => ['required', 'integer', 'exists:personnels,id'],
             'replaced_component' => ['nullable', 'string', 'max:255'],
             'repair_action' => ['required', 'string', 'max:1000'],
+            'client_time' => ['nullable', 'date'],
         ];
     }
 

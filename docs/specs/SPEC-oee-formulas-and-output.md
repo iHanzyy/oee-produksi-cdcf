@@ -74,8 +74,9 @@ Saat sesi dimulai, planned production time diambil dari standar produk-mesin. Sa
 ### Rumus
 
 ```text
-Process Time / Operating Time = Planned Production Time - Downtime
-Availability = Operating Time / Planned Production Time * 100%
+Realtime Process / Session Duration = akumulasi waktu mesin berstatus running
+Downtime tidak masuk ke timer Session Duration karena timer berhenti selama downtime
+Availability = Realtime Process / Planned Production Time * 100%
 Quality = Good Output / Total Output * 100%
 OEE = Availability * Performance * Quality / 10,000
 ```
@@ -83,18 +84,18 @@ OEE = Availability * Performance * Quality / 10,000
 Untuk cetak, striping, dan blister:
 
 ```text
-Performance = Ideal Cycle Time * Total Output / Operating Time * 100%
+Performance = Ideal Cycle Time * Total Output / Realtime Process * 100%
 ```
 
-Ideal Cycle Time dan Operating Time sama-sama memakai menit. Total Output memakai tablet, strip, atau blister sesuai standar.
+Ideal Cycle Time dan Realtime Process sama-sama memakai menit. Total Output memakai tablet, strip, atau blister sesuai standar.
 
 Untuk granulasi dan coating, rumus dipertahankan persis sesuai ketentuan pengguna:
 
 ```text
-Performance = Operating Time * Good Output / (Operating Time * Total Output) * 100%
+Performance = Process Time * Good Output / (Realtime Process * Total Output) * 100%
 ```
 
-Nilai tersebut secara matematis sama dengan Quality. Jika Operating Time tidak positif, penyelesaian ditolak. Downtime berasal dari total downtime selesai pada sesi; durasi aktual sejak mulai tidak ikut dalam rumus OEE.
+Process Time dan Realtime Process memakai akumulasi waktu mesin running yang sama, sehingga rumus tersebut secara matematis sama dengan Quality. Jika Realtime Process tidak positif, penyelesaian ditolak. Downtime tetap dicatat dan ditampilkan terpisah; timer Durasi Sesi berhenti selama downtime lalu berlanjut saat mesin running kembali.
 
 ## Master Data
 
@@ -102,36 +103,36 @@ Nilai tersebut secara matematis sama dengan Quality. Jika Operating Time tidak p
 
 - Semua produk memakai `0.0125` menit/strip.
 - Alyrenol, Pregnolin, Progeston, Prestrenol: output teoritis 20,000 strip; planned time 960 menit.
-- Bifertil, Provula, Novasteron, Norelut, Meprolut, Luteron, Norethisterone Tab 5 mg, Etiro-N, Andalut: output teoritis 14,000 strip; planned time 480 menit.
+- Bifertil, Provula, Novasterone, Norelut, Meprolut, Luteron, Norethisterone, Etiro-N, Andalut: output teoritis 14,000 strip; planned time 480 menit.
 
 ### Cetak — `Cetak Gylongli 1` dan `Cetak Gylongli 2`
 
 - Semua produk memakai `0.0004525` menit/tablet.
 - Alyrenol, Pregnolin, Progeston, Prestrenol: output teoritis 200,000 tablet; planned time 480 menit.
-- Bifertil, Provula, Novasteron, Norelut, Meprolut, Luteron, Norethisterone Tab 5 mg, Etiro-N, Andalut: output teoritis 140,000 tablet; planned time 480 menit.
+- Bifertil, Provula, Novasterone, Norelut, Meprolut, Luteron, Norethisterone, Etiro-N, Andalut: output teoritis 140,000 tablet; planned time 480 menit.
 - Trinordiol Fase 1: 636,000 tablet; planned time 660 menit.
 - Trinordiol Fase 2: 530,000 tablet; planned time 660 menit.
-- Trinordiol Fase 3: 530,000 tablet; planned time 660 menit.
-- Pil KB Harmonies: 1,500,000 tablet; planned time 1,140 menit.
+- Trinordiol Fase 3: 1,060,000 tablet; planned time 660 menit.
+- Pil KB Harmonis: 1,500,000 tablet; planned time 1,140 menit.
 
 ### Blister — `Blister DKPS 1` dan `Blister DKPS 2`
 
-- Pil KB Harmonies: output teoritis 71,428 blister; `0.0111` menit/blister; planned time 1,980 menit.
+- Pil KB Harmonis: output teoritis 71,428 blister; `0.0111` menit/blister; planned time 1,980 menit.
 - Trinordiol: output teoritis 106,000 blister; `0.01667` menit/blister; planned time 3,300 menit.
 
 ### Granulasi — `Mixing`
 
 - Alyrenol, Pregnolin, Progeston, Prestrenol: output teoritis 40 kg; planned time 480 menit.
 - Bifertil, Provula: output teoritis 25.55 kg; planned time 480 menit.
-- Novasteron, Norelut, Meprolut, Luteron, Norethisterone Tab 5 mg, Etiro-N, Andalut: output teoritis 25.235 kg; planned time 480 menit.
+- Novasterone, Norelut, Meprolut, Luteron, Norethisterone, Etiro-N, Andalut: output teoritis 25.235 kg; planned time 480 menit.
 - Trinordiol Fase 1: 34.980 kg; planned time 660 menit.
 - Trinordiol Fase 2: 29.150 kg; planned time 660 menit.
 - Trinordiol Fase 3: 58.300 kg; planned time 660 menit.
-- Pil KB Harmonies: 90 kg; planned time 660 menit.
+- Pil KB Harmonis: 90 kg; planned time 660 menit.
 
 ### Coating — `Coating Yenchen`
 
-- Pil KB Harmonies: output teoritis 90 kg; planned time 660 menit.
+- Pil KB Harmonis: output teoritis 90 kg; planned time 660 menit.
 - Trinordiol Fase 1: 34.980 kg; planned time 1,320 menit.
 - Trinordiol Fase 2: 29.150 kg; planned time 1,140 menit.
 - Trinordiol Fase 3: 58.300 kg; planned time 1,800 menit.
@@ -141,7 +142,7 @@ Nilai tersebut secara matematis sama dengan Quality. Jika Operating Time tidak p
 - Dialog selesai produksi menampilkan Total Output dan Reject, bukan hanya Output Aktual (kg).
 - Label, helper text, `step`, dan contoh mengikuti `output_unit` dari standar sesi.
 - Good Output ditampilkan sebagai hasil otomatis sebelum konfirmasi.
-- Setelah selesai, dashboard dan riwayat menampilkan Total, Reject, Good, satuan, planned time, operating time, Availability, Performance, Quality, OEE, dan peringatan.
+- Setelah selesai, dashboard dan riwayat menampilkan Total, Reject, Good, satuan, planned time, Durasi Sesi, Availability, Performance, Quality, OEE, dan peringatan tanpa Waktu Operasi Bersih.
 - Form tetap dapat digunakan dengan keyboard, label terhubung ke input, error server terlihat, dan tombol konfirmasi tidak aktif saat input belum valid.
 
 ## Testing Strategy
@@ -163,8 +164,8 @@ Nilai tersebut secara matematis sama dengan Quality. Jika Operating Time tidak p
 ## Success Criteria
 
 - Planned production time setiap sesi baru cocok dengan pasangan produk-mesin pada master di atas.
-- Availability memakai planned time dikurangi downtime, bukan durasi wall-clock sesi.
-- Performance cetak/striping/blister memakai ideal cycle dan total output dalam satuan mesin.
+- Availability memakai akumulasi waktu mesin berstatus running, lalu dibandingkan dengan planned time.
+- Performance cetak/striping/blister memakai ideal cycle dan total output dalam satuan mesin dibagi akumulasi waktu mesin running.
 - Performance granulasi/coating memakai rumus yield-ratio yang disetujui dan sama dengan Quality.
 - Quality memakai Good Output hasil Total Output dikurangi Reject.
 - Input invalid ditolak tanpa menyelesaikan atau merusak sesi.

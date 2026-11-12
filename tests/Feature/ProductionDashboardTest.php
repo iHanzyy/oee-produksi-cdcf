@@ -34,6 +34,21 @@ class ProductionDashboardTest extends TestCase
         $this->assertStringContainsString('Memuat riwayat...', $history);
     }
 
+    public function test_mobile_timer_resyncs_without_asking_for_a_page_reload(): void
+    {
+        $script = file_get_contents(resource_path('js/app.js'));
+
+        $this->assertSame(1440, config('session.lifetime'));
+        $this->assertStringContainsString('clockOffsetMs: config.deviceClockTestMode', $script);
+        $this->assertStringContainsString('client_time: new Date().toISOString()', $script);
+        $this->assertStringContainsString('!config.deviceClockTestMode && payload?.serverNow', $script);
+        $this->assertStringContainsString("document.addEventListener('visibilitychange'", $script);
+        $this->assertStringContainsString("window.addEventListener('pageshow'", $script);
+        $this->assertStringContainsString('accumulatedRunningSeconds + activeRunningSeconds', $script);
+        $this->assertStringNotContainsString('totalSeconds - previousDowntimeSeconds', $script);
+        $this->assertStringNotContainsString('Halaman sudah terlalu lama dibuka', $script);
+    }
+
     public function test_confirmation_actions_are_not_stored_as_alpine_auto_evaluated_functions(): void
     {
         $script = file_get_contents(resource_path('js/app.js'));
@@ -75,7 +90,7 @@ class ProductionDashboardTest extends TestCase
             ->assertSee('x-text="session?.batchNumber || \'-\'"', false)
             ->assertSee('product-options')
             ->assertSee('machine-options')
-            ->assertSee('Novasteron')
+            ->assertSee('Novasterone')
             ->assertSee('Cetak Gylongli 1')
             ->assertSee('STOP MESIN')
             ->assertSee('Selesai Downtime')
@@ -94,6 +109,7 @@ class ProductionDashboardTest extends TestCase
             ->assertSee('Good Output')
             ->assertSee('id="total_output"', false)
             ->assertSee('id="reject_output"', false)
+            ->assertSee(':type="outputUnitLabel === \'kg\' ? \'text\' : \'number\'"', false)
             ->assertSee('x-model="totalOutput"', false)
             ->assertSee('x-model="rejectOutput"', false)
             ->assertSee('outputUnitLabel', false)
@@ -115,6 +131,7 @@ class ProductionDashboardTest extends TestCase
         $this->assertStringContainsString('total_output', $script);
         $this->assertStringContainsString('reject_output', $script);
         $this->assertStringContainsString('goodOutput', $script);
+        $this->assertStringContainsString("replace(',', '.')", $script);
         $this->assertStringContainsString('canConfirm()', $script);
     }
 
@@ -122,7 +139,7 @@ class ProductionDashboardTest extends TestCase
     {
         $operator = User::factory()->create(['role' => 'operator']);
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         ProductionSession::create([
             'machine_id' => $machine->id,
@@ -145,7 +162,7 @@ class ProductionDashboardTest extends TestCase
     {
         $operator = User::factory()->create(['role' => 'operator']);
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Stripper Indomach']);
         $category = DowntimeCategory::create(['category_name' => 'Troubleshooting Kelistrikan']);
         $personnel = Personnel::create(['name' => 'Teknisi Listrik Pabrik', 'role' => 'Teknisi']);
@@ -179,8 +196,9 @@ class ProductionDashboardTest extends TestCase
         $response->assertOk()
             ->assertSee('MESIN BERHENTI (DOWNTIME)')
             ->assertSee('Total Waktu Mesin Berhenti')
-            ->assertSee('Total Waktu Mesin Berjalan')
-            ->assertDontSee('Total Waktu Sesi')
+            ->assertSee('Durasi Sesi')
+            ->assertDontSee('Total Waktu Mesin Berjalan')
+            ->assertDontSee('Operating Time')
             ->assertDontSee('Jam Stop Mesin')
             ->assertSee('Stripper Indomach')
             ->assertSee('Ahmad')

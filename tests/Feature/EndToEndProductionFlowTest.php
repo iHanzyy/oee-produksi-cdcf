@@ -24,7 +24,7 @@ class EndToEndProductionFlowTest extends TestCase
         $operator = User::factory()->create(['role' => 'operator']);
         $spv = User::factory()->create(['role' => 'spv']);
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         OeeStandard::create([
             'product_id' => $product->id,

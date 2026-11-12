@@ -64,6 +64,70 @@ class DowntimeControlTest extends TestCase
         $this->assertNotNull($log->go_time);
     }
 
+    public function test_running_and_downtime_durations_advance_independently(): void
+    {
+        Carbon::setTestNow('2026-09-24 01:00:00');
+        [$operator, $session, $token] = $this->runningSession();
+
+        Carbon::setTestNow('2026-09-24 01:10:00');
+        $this->postAsBrowser($operator, $token, route('machine.stop', $session))
+            ->assertOk()
+            ->assertJsonPath('data.summary.accumulatedRunningSeconds', 600)
+            ->assertJsonPath('data.summary.totalDurationSeconds', 600);
+
+        Carbon::setTestNow('2026-09-24 01:20:00');
+        $this->actingAs($operator)
+            ->withCredentials()
+            ->withCookie('device_token', $token)
+            ->getJson(route('production.status', ['session_id' => $session->id]))
+            ->assertOk()
+            ->assertJsonPath('data.summary.accumulatedRunningSeconds', 600)
+            ->assertJsonPath('data.summary.totalDurationSeconds', 600);
+
+        $this->postAsBrowser($operator, $token, route('machine.resume', $session), $this->downtimeDetails())
+            ->assertOk()
+            ->assertJsonPath('data.summary.accumulatedRunningSeconds', 600)
+            ->assertJsonPath('data.summary.runningSince', fn ($value) => $value !== null);
+
+        Carbon::setTestNow('2026-09-24 01:25:00');
+        $this->actingAs($operator)
+            ->withCredentials()
+            ->withCookie('device_token', $token)
+            ->getJson(route('production.status', ['session_id' => $session->id]))
+            ->assertOk()
+            ->assertJsonPath('data.summary.accumulatedRunningSeconds', 600)
+            ->assertJsonPath('data.summary.totalDurationSeconds', 900)
+            ->assertJsonPath('data.summary.totalDowntimeSeconds', 600);
+    }
+
+    public function test_device_clock_test_mode_persists_the_jump_before_starting_downtime(): void
+    {
+        config(['app.device_clock_test_mode' => true]);
+        Carbon::setTestNow('2026-09-24 01:00:00');
+
+        try {
+            [$operator, $session, $token] = $this->runningSession();
+
+            $this->postAsBrowser($operator, $token, route('machine.stop', $session), [
+                'client_time' => '2026-09-24T07:00:00Z',
+            ])->assertOk()
+                ->assertJsonPath('data.downtime.stopTime', '2026-09-24T14:00:00+07:00');
+
+            $stopTime = DowntimeLog::where('production_session_id', $session->id)->sole()->stop_time;
+            $this->assertSame(21600, (int) $session->start_time->diffInSeconds($stopTime));
+
+            $this->postAsBrowser($operator, $token, route('machine.resume', $session), [
+                ...$this->downtimeDetails(),
+                'client_time' => '2026-09-24T07:30:00Z',
+            ])->assertOk()
+                ->assertJsonPath('data.summary.totalDowntimeSeconds', 1800);
+
+            $this->assertSame(1800, DowntimeLog::where('production_session_id', $session->id)->sole()->duration_seconds);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_production_cannot_finish_during_downtime(): void
     {
         [$operator, $session, $token] = $this->runningSession();
@@ -128,7 +192,7 @@ class DowntimeControlTest extends TestCase
     {
         $operator = User::factory()->create(['role' => 'operator']);
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         OeeStandard::create([
             'product_id' => $product->id,

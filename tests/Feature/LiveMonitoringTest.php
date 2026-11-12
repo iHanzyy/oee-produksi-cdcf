@@ -17,7 +17,7 @@ class LiveMonitoringTest extends TestCase
     public function test_spv_and_manager_can_see_live_active_sessions_and_poll_status(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine1 = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         $machine2 = Machine::create(['area_id' => $area->id, 'machine_name' => 'Cetak Gylongli 1']);
 
@@ -76,7 +76,7 @@ class LiveMonitoringTest extends TestCase
     public function test_operator_dashboard_does_not_expose_other_running_machines(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine1 = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         $machine2 = Machine::create(['area_id' => $area->id, 'machine_name' => 'Cetak Gylongli 1']);
 

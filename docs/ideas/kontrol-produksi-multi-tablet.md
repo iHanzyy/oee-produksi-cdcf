@@ -24,11 +24,11 @@ Browser mengingat sesi aktif secara otomatis. Jika tablet awal rusak atau data b
 
 Produk:
 
-- Novasteron
+- Novasterone
 - Meprolut
 - Norelut
 - Etiro-N
-- Norethisterone Tab 5 mg
+- Norethisterone
 - Luteron
 - Andalut
 - Bifertil
@@ -43,7 +43,7 @@ Produk:
 - Prestrenol
 - Maxinor
 - Prinolas
-- Pil KB Harmonies
+- Pil KB Harmonis
 - Trinordiol
 - Dienogest
 

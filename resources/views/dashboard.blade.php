@@ -2,6 +2,7 @@
     <div
         x-data="productionControl({
             initial: @js($dashboardState),
+            deviceClockTestMode: @js(config('app.device_clock_test_mode')),
             areas: @js($areaOptions),
             categories: @js($categories->map(fn ($category) => ['id' => $category->id, 'name' => $category->category_name])->values()),
             personnels: @js($personnels->map(fn ($personnel) => ['id' => $personnel->id, 'name' => $personnel->name])->values()),
@@ -256,7 +257,7 @@
                     <div class="flex flex-col sm:items-end gap-2">
                         <!-- Tampilan Timer Running -->
                         <div x-show="state === 'running'" class="rounded-xl border border-emerald-200 bg-emerald-50/70 px-5 py-3 text-center sm:text-right min-w-[200px]">
-                            <p class="text-xs font-bold uppercase tracking-wider text-emerald-800">Total Waktu Mesin Berjalan</p>
+                            <p class="text-xs font-bold uppercase tracking-wider text-emerald-800">Durasi Sesi</p>
                             <p class="mt-0.5 font-mono text-3xl sm:text-4xl font-extrabold text-slate-900 tabular-nums" x-text="elapsed" aria-live="off"></p>
                         </div>
 
@@ -270,9 +271,9 @@
                                 </p>
                                 <p class="mt-0.5 font-mono text-3xl sm:text-4xl font-black text-red-800 tabular-nums animate-pulse" x-text="downtimeElapsed" aria-live="off"></p>
                             </div>
-                            <!-- Sekunder Timer: Total Sesi -->
+                            <!-- Sekunder Timer: Durasi Sesi -->
                             <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center sm:text-right min-w-[150px]">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Waktu Mesin Berjalan</p>
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Durasi Sesi</p>
                                 <p class="mt-0.5 font-mono text-2xl font-bold text-slate-700 tabular-nums" x-text="elapsed" aria-live="off"></p>
                             </div>
                         </div>
@@ -422,7 +423,7 @@
                             <dd class="mt-1 text-base font-bold text-slate-900" x-text="session?.endTime ? new Date(session.endTime).toLocaleString('id-ID') : '-'"></dd>
                         </div>
                         <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Total Waktu Mesin Berjalan</dt>
+                            <dt class="text-xs font-bold uppercase text-emerald-800">Durasi Sesi</dt>
                             <dd class="mt-1 text-base font-bold text-slate-900" x-text="duration(session?.summary.totalDurationSeconds)"></dd>
                         </div>
                         <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
@@ -452,10 +453,6 @@
                         <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
                             <dt class="text-xs font-bold uppercase text-emerald-800">Planned Production Time</dt>
                             <dd class="mt-1 text-base font-bold text-slate-900" x-text="duration((session?.oee?.plannedTimeMinutes ?? 0) * 60)"></dd>
-                        </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Operating Time</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900" x-text="duration(session?.oee?.operatingTimeSeconds)"></dd>
                         </div>
                         <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
                             <dt class="text-xs font-bold uppercase text-emerald-800">Availability</dt>
@@ -500,7 +497,7 @@
                         <input
                             id="total_output"
                             x-model="totalOutput"
-                            type="number"
+                            :type="outputUnitLabel === 'kg' ? 'text' : 'number'"
                             :step="outputStep"
                             min="0"
                             inputmode="decimal"
@@ -516,7 +513,7 @@
                         <input
                             id="reject_output"
                             x-model="rejectOutput"
-                            type="number"
+                            :type="outputUnitLabel === 'kg' ? 'text' : 'number'"
                             :step="outputStep"
                             min="0"
                             :max="totalOutput"

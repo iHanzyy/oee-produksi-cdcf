@@ -43,6 +43,7 @@ class StartProductionSessionRequest extends FormRequest
                     fn (Builder $query) => $query->where('area_id', $areaId)->where('is_active', true)
                 ),
             ],
+            'client_time' => ['nullable', 'date'],
         ];
     }
 

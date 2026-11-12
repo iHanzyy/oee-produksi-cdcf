@@ -34,7 +34,7 @@ class DeviceOwnershipTest extends TestCase
     public function test_session_stores_product_operator_name_and_only_a_controller_hash(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         $token = str_repeat('a', 64);
 
@@ -57,7 +57,7 @@ class DeviceOwnershipTest extends TestCase
     public function test_one_controller_hash_cannot_be_attached_to_two_sessions(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
-        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasteron']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $firstMachine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
         $secondMachine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Coating Yenchen']);
         $attributes = [

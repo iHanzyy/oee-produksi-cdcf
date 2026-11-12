@@ -29,14 +29,13 @@
         $downtimeCount = $session->downtimeLogs->count();
         $totalDowntimeSeconds = (int) $session->downtimeLogs->sum('duration_seconds');
         $totalDowntimeMinutesText = rtrim(rtrim(number_format($totalDowntimeSeconds / 60, 1, ',', '.'), '0'), ',') . ' menit';
-        $sessionDurationSeconds = ($session->start_time && $session->end_time)
-            ? max(0, $session->start_time->diffInSeconds($session->end_time))
-            : null;
+        $sessionDurationSeconds = $session->operating_time_seconds !== null
+            ? (int) $session->operating_time_seconds
+            : (($session->start_time && $session->end_time)
+                ? max(0, $session->start_time->diffInSeconds($session->end_time) - $totalDowntimeSeconds)
+                : null);
         $sessionDurationMinutesText = $sessionDurationSeconds !== null
             ? rtrim(rtrim(number_format($sessionDurationSeconds / 60, 1, ',', '.'), '0'), ',') . ' menit'
-            : '-';
-        $operatingMinutesText = $session->operating_time_seconds !== null
-            ? rtrim(rtrim(number_format($session->operating_time_seconds / 60, 1, ',', '.'), '0'), ',') . ' menit'
             : '-';
         $plannedMinutesText = $session->planned_time_minutes !== null
             ? number_format((int) $session->planned_time_minutes, 0, ',', '.') . ' menit'
@@ -46,6 +45,14 @@
             : ($session->ideal_cycle_time_hours_per_kg !== null
                 ? rtrim(rtrim(number_format((float) $session->ideal_cycle_time_hours_per_kg * 60, 2, ',', '.'), '0'), ',') . ' menit/kg'
                 : '-');
+        $idealCycleMinutes = $session->ideal_cycle_time_minutes_per_unit !== null
+            ? (float) $session->ideal_cycle_time_minutes_per_unit
+            : ($session->ideal_cycle_time_hours_per_kg !== null
+                ? (float) $session->ideal_cycle_time_hours_per_kg * 60
+                : null);
+        $idealRealtimeProcessText = $theoreticalOutputValue !== null && $idealCycleMinutes !== null
+            ? rtrim(rtrim(number_format((float) $theoreticalOutputValue * $idealCycleMinutes, 4, ',', '.'), '0'), ',') . ' menit'
+            : '-';
     @endphp
 
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -142,6 +149,10 @@
                         <dd class="mt-1 text-sm font-bold text-slate-900">{{ $idealCycleText }}</dd>
                     </div>
                     <div>
+                        <dt class="font-semibold text-slate-500">Ideal Realtime Proses</dt>
+                        <dd class="mt-1 text-sm font-bold text-slate-900">{{ $idealRealtimeProcessText }}</dd>
+                    </div>
+                    <div>
                         <dt class="font-semibold text-slate-500">Nomor Batch</dt>
                         <dd class="mt-1 text-sm font-bold text-slate-900">{{ $session->batch_number ?? '-' }}</dd>
                     </div>
@@ -170,10 +181,6 @@
                     <div>
                         <dt class="font-semibold text-slate-500">Waktu Rencana</dt>
                         <dd class="mt-1 font-bold text-slate-900">{{ $plannedMinutesText }}</dd>
-                    </div>
-                    <div>
-                        <dt class="font-semibold text-slate-500">Waktu Operasi Bersih</dt>
-                        <dd class="mt-1 font-bold text-slate-900">{{ $operatingMinutesText }}</dd>
                     </div>
                     <div>
                         <dt class="font-semibold text-slate-500">Total Downtime</dt>

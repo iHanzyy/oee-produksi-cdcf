@@ -67,6 +67,8 @@ return [
 
     'timezone' => 'UTC',
 
+    'device_clock_test_mode' => env('OEE_DEVICE_CLOCK_TEST_MODE', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
