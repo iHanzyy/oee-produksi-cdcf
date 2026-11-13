@@ -12,20 +12,15 @@
                 base: @js(url('/production-sessions')),
             },
         })"
-        class="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8"
+        class="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl flex-col justify-center px-4 py-5 sm:px-6 sm:py-8 lg:px-8"
     >
-        <header class="mb-6">
-            <p class="text-sm font-semibold text-brand-700">Stasiun Produksi</p>
-            <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Kontrol Mesin</h1>
-        </header>
-
         <div
             x-cloak
             x-show="busy"
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            class="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-xl border border-brand-700 bg-white px-4 py-3 text-sm font-bold text-slate-950 shadow-lg sm:inset-x-auto sm:right-6 sm:w-96"
+            class="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-xl border border-oee-blue bg-white px-4 py-3 text-sm font-bold text-oee-navy shadow-lg sm:inset-x-auto sm:right-6 sm:w-96"
         >
             <span x-text="busyMessage">Menyimpan perubahan...</span>
         </div>
@@ -44,16 +39,16 @@
         <!-- 1. STATUS READY (Mulai Produksi Baru) -->
         <section x-show="state === 'ready'" aria-labelledby="start-title">
             <!-- Form Mulai Sesi Produksi -->
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
-                <div class="border-b border-slate-100 pb-4">
-                    <h2 id="start-title" class="text-xl font-bold text-slate-950 sm:text-2xl">Mulai Sesi Produksi</h2>
+            <div class="rounded-2xl border border-oee-ice bg-white p-5 shadow-sm sm:p-8">
+                <div class="border-b border-oee-ice/70 pb-4">
+                    <h2 id="start-title" class="text-xl font-bold text-oee-navy sm:text-2xl">Mulai Sesi Produksi</h2>
                 </div>
 
                 <form class="mt-6 grid gap-5 sm:grid-cols-2" @submit.prevent="start">
                     <!-- Area Operasional -->
                     <div>
                         <label for="area_id" class="block text-sm font-bold text-slate-800">Area Operasional <span class="text-red-600">*</span></label>
-                        <select id="area_id" x-model="areaId" @change="changeArea" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 focus:border-brand-700 focus:ring-brand-700">
+                        <select id="area_id" x-model="areaId" @change="changeArea" required class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base font-semibold text-oee-navy focus:border-oee-blue focus:ring-oee-blue">
                             <option value="">-- Pilih Area Operasional --</option>
                             @foreach ($areas as $area)
                                 <option value="{{ $area->id }}">{{ $area->area_name }}</option>
@@ -64,7 +59,7 @@
                     <!-- Nama Operator -->
                     <div>
                         <label for="operator_name" class="block text-sm font-bold text-slate-800">Nama Operator <span class="text-red-600">*</span></label>
-                        <input id="operator_name" x-model.trim="operatorName" type="text" maxlength="100" autocomplete="name" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700" placeholder="Nama operator">
+                        <input id="operator_name" x-model.trim="operatorName" type="text" maxlength="100" autocomplete="name" required class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base font-medium text-oee-navy focus:border-oee-blue focus:ring-oee-blue" placeholder="Nama operator">
                     </div>
 
                     <!-- Nama Produk (Ketik & Dropdown) -->
@@ -83,7 +78,7 @@
                                 autocomplete="off"
                                 required
                                 :disabled="!areaId"
-                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                class="block min-h-[50px] w-full rounded-xl border-oee-cyan/70 pr-10 text-base font-medium text-oee-navy focus:border-oee-blue focus:ring-oee-blue disabled:cursor-not-allowed disabled:bg-oee-ice/25"
                                 :placeholder="areaId ? 'Ketik atau klik untuk pilih produk...' : 'Pilih Area terlebih dahulu'"
                             >
                             <button
@@ -94,7 +89,7 @@
                                 tabindex="-1"
                                 aria-label="Buka daftar produk"
                             >
-                                <svg class="h-5 w-5 transition-transform duration-200" :class="productMenuOpen ? 'rotate-180 text-brand-700' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="h-5 w-5 transition-transform duration-200" :class="productMenuOpen ? 'rotate-180 text-oee-blue' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
 
@@ -102,16 +97,16 @@
                         <div
                             x-show="productMenuOpen && areaId"
                             x-cloak
-                            class="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-2xl"
+                            class="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-oee-ice bg-white p-1 shadow-2xl"
                         >
                             <template x-for="prod in filteredProducts" :key="prod.id">
                                 <button
                                     type="button"
                                     @click="selectProduct(prod)"
-                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-brand-700"
+                                    class="flex w-full items-center justify-between rounded-lg border-b border-oee-ice/70 px-4 py-3 text-left text-base font-semibold text-oee-navy last:border-0 hover:bg-oee-ice/40 hover:text-oee-blue"
                                 >
                                     <span x-text="prod.name"></span>
-                                    <span x-show="productId === prod.id" class="font-bold text-brand-700">✓</span>
+                                    <span x-show="productId === prod.id" class="font-bold text-oee-blue">✓</span>
                                 </button>
                             </template>
                             <div x-show="filteredProducts.length === 0" class="px-4 py-3 text-sm text-slate-500 text-center">
@@ -130,7 +125,7 @@
 
                         <div class="mt-5">
                             <label for="batch_number" class="block text-sm font-bold text-slate-800">Nomor Batch <span class="text-red-600">*</span></label>
-                            <input id="batch_number" x-model.trim="batchNumber" type="text" maxlength="255" autocomplete="off" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700" placeholder="Nomor batch">
+                            <input id="batch_number" x-model.trim="batchNumber" type="text" maxlength="255" autocomplete="off" required class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base font-medium text-oee-navy focus:border-oee-blue focus:ring-oee-blue" placeholder="Nomor batch">
                         </div>
                     </div>
 
@@ -150,7 +145,7 @@
                                 autocomplete="off"
                                 required
                                 :disabled="!areaId"
-                                class="block min-h-[50px] w-full rounded-xl border-slate-300 pr-10 text-base font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                class="block min-h-[50px] w-full rounded-xl border-oee-cyan/70 pr-10 text-base font-medium text-oee-navy focus:border-oee-blue focus:ring-oee-blue disabled:cursor-not-allowed disabled:bg-oee-ice/25"
                                 :placeholder="areaId ? 'Ketik atau klik untuk pilih mesin...' : 'Pilih Area terlebih dahulu'"
                             >
                             <button
@@ -161,7 +156,7 @@
                                 tabindex="-1"
                                 aria-label="Buka daftar mesin"
                             >
-                                <svg class="h-5 w-5 transition-transform duration-200" :class="machineMenuOpen ? 'rotate-180 text-brand-700' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg class="h-5 w-5 transition-transform duration-200" :class="machineMenuOpen ? 'rotate-180 text-oee-blue' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
 
@@ -169,16 +164,16 @@
                         <div
                             x-show="machineMenuOpen && areaId"
                             x-cloak
-                            class="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-2xl"
+                            class="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-oee-ice bg-white p-1 shadow-2xl"
                         >
                             <template x-for="mch in filteredMachines" :key="mch.id">
                                 <button
                                     type="button"
                                     @click="selectMachine(mch)"
-                                    class="flex w-full items-center justify-between rounded-lg border-b border-slate-100 px-4 py-3 text-left text-base font-semibold text-slate-800 last:border-0 hover:bg-sky-50 hover:text-brand-700"
+                                    class="flex w-full items-center justify-between rounded-lg border-b border-oee-ice/70 px-4 py-3 text-left text-base font-semibold text-oee-navy last:border-0 hover:bg-oee-ice/40 hover:text-oee-blue"
                                 >
                                     <span x-text="mch.name"></span>
-                                    <span x-show="machineId === mch.id" class="font-bold text-brand-700">✓</span>
+                                    <span x-show="machineId === mch.id" class="font-bold text-oee-blue">✓</span>
                                 </button>
                             </template>
                             <div x-show="filteredMachines.length === 0" class="px-4 py-3 text-sm text-slate-500 text-center">
@@ -198,7 +193,7 @@
 
                     <!-- Tombol Start Produksi -->
                     <div class="sm:col-span-2 pt-2">
-                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-brand-700 px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg">
+                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-oee-blue px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-oee-navy focus:outline-none focus:ring-2 focus:ring-oee-blue focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg">
                             <span x-show="!busy">Mulai Produksi</span>
                             <span x-cloak x-show="busy">Menyiapkan sesi...</span>
                         </button>
@@ -485,9 +480,9 @@
         </section>
 
         <!-- Dialog Konfirmasi In-Page Tablet-Friendly -->
-        <div x-show="confirmAction" x-cloak @keydown.escape.window="cancelConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="confirmTitle">
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
-                <h3 class="text-xl font-bold text-slate-900" x-text="confirmTitle"></h3>
+        <div x-show="confirmAction" x-cloak @keydown.escape.window="cancelConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-oee-navy/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="confirmTitle">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-oee-ice">
+                <h3 class="text-xl font-bold text-oee-navy" x-text="confirmTitle"></h3>
                 <p class="mt-2 text-base text-slate-600 leading-relaxed" x-text="confirmMessage"></p>
                 <div x-show="confirmAction === 'finish'" class="mt-4 space-y-4">
                     <div>
@@ -502,7 +497,7 @@
                             min="0"
                             inputmode="decimal"
                             required
-                            class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-brand-700 focus:ring-brand-700"
+                            class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base font-semibold text-oee-navy tabular-nums focus:border-oee-blue focus:ring-oee-blue"
                             placeholder="Masukkan seluruh output"
                         >
                     </div>
@@ -519,7 +514,7 @@
                             :max="totalOutput"
                             inputmode="decimal"
                             required
-                            class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-semibold text-slate-900 tabular-nums focus:border-brand-700 focus:ring-brand-700"
+                            class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base font-semibold text-oee-navy tabular-nums focus:border-oee-blue focus:ring-oee-blue"
                             placeholder="Masukkan output reject"
                         >
                     </div>
@@ -539,8 +534,8 @@
         </div>
 
         <!-- Dialog Pemberitahuan Sistem In-Page Tablet-Friendly -->
-        <div x-show="alertDialogMessage" x-cloak @keydown.escape.window="alertDialogMessage = ''" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="alertTitle || 'Pemberitahuan Sistem'">
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200">
+        <div x-show="alertDialogMessage" x-cloak @keydown.escape.window="alertDialogMessage = ''" class="fixed inset-0 z-50 flex items-center justify-center bg-oee-navy/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="alertTitle || 'Pemberitahuan Sistem'">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-oee-ice">
                 <div class="flex items-center gap-3">
                     <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
                         <svg class="h-6 w-6" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -548,13 +543,13 @@
                         </svg>
                     </span>
                     <div>
-                        <h3 class="text-xl font-bold text-slate-900" x-text="alertTitle || 'Pemberitahuan Sistem'"></h3>
+                        <h3 class="text-xl font-bold text-oee-navy" x-text="alertTitle || 'Pemberitahuan Sistem'"></h3>
                         <p class="text-xs text-slate-500 font-medium">Stasiun Kontrol Produksi</p>
                     </div>
                 </div>
                 <p class="mt-4 text-base font-medium text-slate-700 leading-relaxed" x-text="alertDialogMessage"></p>
                 <div class="mt-6 flex justify-end">
-                    <button type="button" @click="alertDialogMessage = ''" class="min-h-[48px] w-full rounded-xl bg-slate-800 px-6 py-2.5 text-base font-bold text-white shadow-md hover:bg-slate-900 active:scale-[0.98] transition-all">
+                    <button type="button" @click="alertDialogMessage = ''" class="min-h-[48px] w-full rounded-xl bg-oee-navy px-6 py-2.5 text-base font-bold text-white shadow-md hover:bg-oee-blue active:scale-[0.98] transition-all">
                         Mengerti
                     </button>
                 </div>

@@ -14,6 +14,7 @@ class RoleAccessTest extends TestCase
     {
         $operator = User::factory()->create(['role' => 'operator']);
 
+        $this->assertSame('/dashboard/operator', route('dashboard', absolute: false));
         $this->actingAs($operator)->get(route('dashboard'))->assertOk();
         $this->actingAs($operator)->get(route('history.index'))->assertRedirect(route('dashboard'));
         $this->actingAs($operator)->get(route('history.export'))->assertRedirect(route('dashboard'));

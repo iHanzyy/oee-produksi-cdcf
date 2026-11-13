@@ -10,7 +10,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:operator', 'device'])->group(function () {
-        Route::get('/dashboard', [ProductionController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/operator', [ProductionController::class, 'index'])->name('dashboard');
         Route::post('/production-sessions', [ProductionController::class, 'startSession'])->name('machine.start');
         Route::get('/production-sessions/status', [ProductionController::class, 'status'])->name('production.status');
         Route::post('/production-sessions/{productionSession}/takeover', [ProductionController::class, 'takeover'])->name('production.takeover');
