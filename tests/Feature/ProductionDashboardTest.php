@@ -135,6 +135,31 @@ class ProductionDashboardTest extends TestCase
         $this->assertStringContainsString('canConfirm()', $script);
     }
 
+    public function test_form_dropdown_options_are_sorted_ascending(): void
+    {
+        $operator = User::factory()->create(['role' => 'operator']);
+        Area::create(['area_name' => 'Zeta Area']);
+        $area = Area::create(['area_name' => 'Alpha Area']);
+        Product::create(['area_id' => $area->id, 'product_name' => 'Zeta Product']);
+        Product::create(['area_id' => $area->id, 'product_name' => 'Alpha Product']);
+        Machine::create(['area_id' => $area->id, 'machine_name' => 'Zeta Machine']);
+        Machine::create(['area_id' => $area->id, 'machine_name' => 'Alpha Machine']);
+        DowntimeCategory::create(['category_name' => 'Zeta Category']);
+        DowntimeCategory::create(['category_name' => 'Alpha Category']);
+        Personnel::create(['name' => 'Zeta Technician', 'role' => 'Teknisi']);
+        Personnel::create(['name' => 'Alpha Technician', 'role' => 'Teknisi']);
+
+        $response = $this->actingAs($operator)->get(route('dashboard'));
+        $areaOptions = $response->viewData('areaOptions');
+        $alphaArea = $areaOptions->firstWhere('name', 'Alpha Area');
+
+        $this->assertSame(['Alpha Area', 'Zeta Area'], $areaOptions->pluck('name')->all());
+        $this->assertSame(['Alpha Product', 'Zeta Product'], $alphaArea['products']->pluck('name')->all());
+        $this->assertSame(['Alpha Machine', 'Zeta Machine'], $alphaArea['machines']->pluck('name')->all());
+        $this->assertSame(['Alpha Category', 'Zeta Category'], $response->viewData('categories')->pluck('category_name')->all());
+        $this->assertSame(['Alpha Technician', 'Zeta Technician'], $response->viewData('personnels')->pluck('name')->all());
+    }
+
     public function test_ready_screen_does_not_list_active_sessions_from_other_machines(): void
     {
         $operator = User::factory()->create(['role' => 'operator']);

@@ -26,9 +26,12 @@ class ProductionController extends Controller
             ->where('controller_token_hash', $this->controllerHash($request))
             ->latest()
             ->first();
-        $categories = DowntimeCategory::all();
-        $personnels = Personnel::all();
-        $areas = Area::with(['activeProducts', 'activeMachines'])->get();
+        $categories = DowntimeCategory::query()->orderBy('category_name')->get();
+        $personnels = Personnel::query()->orderBy('name')->get();
+        $areas = Area::with([
+            'activeProducts' => fn ($query) => $query->orderBy('product_name'),
+            'activeMachines' => fn ($query) => $query->orderBy('machine_name'),
+        ])->orderBy('area_name')->get();
         $dashboardState = [
             'data' => $controlledSession ? $this->sessionPayload($controlledSession) : null,
             'isController' => $controlledSession !== null,
