@@ -14,19 +14,25 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Operator Produksi',
                 'email' => 'operator',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('operator'),
                 'role' => 'operator',
             ],
             [
                 'name' => 'Supervisor Produksi',
-                'email' => 'spv',
-                'password' => Hash::make('password'),
+                'email' => 'supervisor',
+                'password' => Hash::make('supervisor'),
                 'role' => 'spv',
             ],
             [
                 'name' => 'Manager Produksi',
                 'email' => 'manager',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('manager'),
+                'role' => 'manager',
+            ],
+            [
+                'name' => 'Associate Managing Director',
+                'email' => 'AMD',
+                'password' => Hash::make('AMD'),
                 'role' => 'manager',
             ],
         ];
@@ -38,9 +44,6 @@ class UserSeeder extends Seeder
             );
         }
 
-        User::query()->where('email', 'supervisor')->update([
-            'role' => 'spv',
-            'password' => Hash::make('password'),
-        ]);
+        User::query()->where('email', 'spv')->delete();
     }
 }
