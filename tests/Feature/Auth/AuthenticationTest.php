@@ -17,9 +17,12 @@ class AuthenticationTest extends TestCase
         $response
             ->assertStatus(200)
             ->assertSee('brand/logo-oee.png')
+            ->assertSee('brand/login-machine.jpg')
             ->assertDontSee('>LOGO<', false)
+            ->assertSee('Selamat datang di OEE')
             ->assertSee('Username')
             ->assertSee('Password')
+            ->assertSee('Created by GJT')
             ->assertDontSee('Forgot your password?')
             ->assertDontSee('Remember me');
     }

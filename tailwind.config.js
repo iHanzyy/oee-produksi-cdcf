@@ -17,6 +17,12 @@ export default {
                     700: '#005cb9',
                     800: '#004c99',
                 },
+                oee: {
+                    navy: '#1B365D',
+                    blue: '#005A9C',
+                    cyan: '#60C1E5',
+                    ice: '#A0E0EF',
+                },
             },
             fontFamily: {
                 sans: ['Manrope', ...defaultTheme.fontFamily.sans],

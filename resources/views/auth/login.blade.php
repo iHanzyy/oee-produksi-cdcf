@@ -12,69 +12,85 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
-        <main class="flex min-h-screen items-center justify-center p-4 sm:p-8">
-            <section class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5" aria-labelledby="login-title">
-                <div class="px-6 py-8 sm:px-10 sm:py-10">
-                    <header class="mb-8 text-center">
-                        <div class="mx-auto h-20 w-56 overflow-hidden" aria-hidden="true">
-                            <img src="{{ asset('brand/logo-oee.png') }}" alt="" width="1672" height="941" class="w-56 -translate-y-7">
-                        </div>
-                        <h1 id="login-title" class="mt-3 text-2xl font-bold tracking-tight text-slate-950">Masuk</h1>
-                    </header>
+    <body class="min-h-screen bg-oee-ice font-sans text-slate-950 antialiased">
+        <main class="grid min-h-[100dvh] lg:grid-cols-2">
+            <section class="flex min-h-[100dvh] flex-col bg-oee-ice px-6 py-5 sm:px-12 sm:py-6 xl:px-24 2xl:px-32" aria-labelledby="login-title">
+                <header class="mt-auto flex justify-center">
+                    <div class="aspect-[3/1] w-full max-w-64 overflow-hidden sm:max-w-80">
+                        <img src="{{ asset('brand/logo-oee.png') }}" alt="OEE, Overall Equipment Effectiveness" width="1672" height="941" class="w-full -translate-y-[15%]">
+                    </div>
+                </header>
 
-                    @if (session('status'))
-                        <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800" role="status">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('login') }}" x-data="{ submitting: false }" @submit="submitting = true" class="space-y-5">
-                        @csrf
-
-                        <div>
-                            <label for="username" class="block text-sm font-semibold text-slate-800">Username</label>
-                            <input
-                                id="username"
-                                type="text"
-                                name="email"
-                                value="{{ old('email') }}"
-                                required
-                                autofocus
-                                autocomplete="username"
-                                @error('email') aria-invalid="true" aria-describedby="username-error" @enderror
-                                class="mt-2 block h-12 w-full rounded-xl border-slate-300 bg-white px-4 text-sm text-slate-950 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-brand-700 focus:ring-brand-700"
-                                placeholder="Masukkan username"
-                            >
-                            @error('email')
-                                <p id="username-error" class="mt-2 text-sm font-medium text-red-700">{{ $message }}</p>
-                            @enderror
+                <div class="pt-4 sm:pt-6">
+                    <div class="mx-auto w-full max-w-2xl">
+                        <div class="mb-8">
+                            <h1 id="login-title" class="text-4xl font-bold tracking-tight">Login</h1>
+                            <p class="mt-1 text-xl font-medium sm:text-2xl">Selamat datang di OEE</p>
                         </div>
 
-                        <div>
-                            <label for="password" class="block text-sm font-semibold text-slate-800">Password</label>
-                            <input
-                                id="password"
-                                type="password"
-                                name="password"
-                                required
-                                autocomplete="current-password"
-                                @error('password') aria-invalid="true" aria-describedby="password-error" @enderror
-                                class="mt-2 block h-12 w-full rounded-xl border-slate-300 bg-white px-4 text-sm text-slate-950 shadow-sm transition placeholder:text-slate-400 hover:border-slate-400 focus:border-brand-700 focus:ring-brand-700"
-                                placeholder="Masukkan password"
-                            >
-                            @error('password')
-                                <p id="password-error" class="mt-2 text-sm font-medium text-red-700">{{ $message }}</p>
-                            @enderror
-                        </div>
+                        @if (session('status'))
+                            <div class="mb-6 rounded-lg border border-emerald-700 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900" role="status">
+                                {{ session('status') }}
+                            </div>
+                        @endif
 
-                        <button type="submit" :disabled="submitting" class="flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-brand-700 px-5 text-sm font-bold text-white transition-colors hover:bg-brand-800 active:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
-                            <span x-show="!submitting">Masuk</span>
-                            <span x-cloak x-show="submitting" role="status" aria-live="polite">Sedang masuk...</span>
-                        </button>
-                    </form>
+                        <form method="POST" action="{{ route('login') }}" x-data="{ submitting: false }" @submit="submitting = true" class="space-y-5 sm:space-y-6">
+                            @csrf
+
+                            <div>
+                                <label for="username" class="block text-lg font-bold sm:text-xl">Username</label>
+                                <input
+                                    id="username"
+                                    type="text"
+                                    name="email"
+                                    value="{{ old('email') }}"
+                                    required
+                                    autofocus
+                                    autocomplete="username"
+                                    @error('email') aria-invalid="true" aria-describedby="username-error" @enderror
+                                    class="mt-2 block h-14 w-full rounded-lg border-oee-blue bg-white/95 px-5 text-base text-slate-950 shadow-none transition-colors placeholder:text-slate-500 hover:border-oee-navy focus:border-oee-navy focus:ring-oee-navy sm:h-16 sm:text-lg"
+                                    placeholder="Masukkan Username"
+                                >
+                                @error('email')
+                                    <p id="username-error" class="mt-2 text-sm font-semibold text-red-800" role="alert">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="password" class="block text-lg font-bold sm:text-xl">Password</label>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    required
+                                    autocomplete="current-password"
+                                    @error('password') aria-invalid="true" aria-describedby="password-error" @enderror
+                                    class="mt-2 block h-14 w-full rounded-lg border-oee-blue bg-white/95 px-5 text-base text-slate-950 shadow-none transition-colors placeholder:text-slate-500 hover:border-oee-navy focus:border-oee-navy focus:ring-oee-navy sm:h-16 sm:text-lg"
+                                    placeholder="Masukkan Password"
+                                >
+                                @error('password')
+                                    <p id="password-error" class="mt-2 text-sm font-semibold text-red-800" role="alert">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="pt-4 sm:pt-6">
+                                <button type="submit" :disabled="submitting" class="flex h-14 w-full cursor-pointer items-center justify-center rounded-lg bg-oee-navy px-5 text-base font-bold text-white transition-colors hover:bg-oee-blue active:bg-oee-navy focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-oee-blue focus-visible:ring-offset-2 focus-visible:ring-offset-oee-ice disabled:cursor-not-allowed disabled:opacity-60 sm:h-16 sm:text-lg">
+                                    <span x-show="!submitting">Login</span>
+                                    <span x-cloak x-show="submitting" role="status" aria-live="polite">Sedang masuk...</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
+                <footer class="mt-auto pt-4 text-center text-sm font-medium sm:text-base">
+                    Copyright &copy; 2026 | Created by GJT
+                </footer>
             </section>
+
+            <aside class="relative hidden min-h-[100dvh] overflow-hidden lg:block" aria-label="Mesin produksi OEE">
+                <img src="{{ asset('brand/login-machine.jpg') }}" alt="Mesin produksi dengan jalur pengisian otomatis" width="2560" height="3200" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover">
+            </aside>
         </main>
     </body>
 </html>
