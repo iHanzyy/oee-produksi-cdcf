@@ -12,6 +12,10 @@ export default {
     theme: {
         extend: {
             colors: {
+                primary: '#1B365D',
+                secondary: '#005A9C',
+                accent: '#60C1E5',
+                background: '#A0E0EF',
                 brand: {
                     400: '#01c5f0',
                     700: '#005cb9',

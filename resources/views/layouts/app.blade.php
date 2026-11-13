@@ -15,7 +15,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-slate-900 antialiased">
-        <div class="min-h-screen {{ auth()->user()?->role === 'operator' ? 'bg-oee-ice/40' : 'bg-slate-50' }}">
+        <div class="min-h-screen {{ auth()->user()?->role === 'operator' ? 'bg-background' : 'bg-slate-50' }}">
             @include('layouts.navigation')
 
             <!-- Page Heading -->

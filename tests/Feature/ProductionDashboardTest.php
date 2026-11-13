@@ -67,9 +67,21 @@ class ProductionDashboardTest extends TestCase
             $view,
         );
         $this->assertMatchesRegularExpression(
-            '/<button[^>]*@click="askFinish"[^>]*class="[^"]*bg-emerald-700[^"]*"[^>]*>\s*<svg[^>]*aria-hidden="true"[^>]*>.*?<span>Selesai Produksi<\/span>/s',
+            '/<button[^>]*@click="askFinish"[^>]*class="[^"]*bg-primary[^"]*"[^>]*>\s*<svg[^>]*aria-hidden="true"[^>]*>.*?<span>Selesai Produksi<\/span>/s',
             $view,
         );
+    }
+
+    public function test_downtime_form_and_completed_summary_are_floating_dialogs(): void
+    {
+        $view = file_get_contents(resource_path('views/dashboard.blade.php'));
+
+        foreach (['downtime-form-title', 'completed-summary-title'] as $title) {
+            $this->assertMatchesRegularExpression(
+                '/<div[^>]*class="fixed inset-0[^"]*"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="'.$title.'"/',
+                $view,
+            );
+        }
     }
 
     public function test_dashboard_contains_searchable_master_inputs_without_fake_oee_metrics(): void
@@ -144,8 +156,8 @@ class ProductionDashboardTest extends TestCase
         Product::create(['area_id' => $area->id, 'product_name' => 'Alpha Product']);
         Machine::create(['area_id' => $area->id, 'machine_name' => 'Zeta Machine']);
         Machine::create(['area_id' => $area->id, 'machine_name' => 'Alpha Machine']);
-        DowntimeCategory::create(['category_name' => 'Zeta Category']);
-        DowntimeCategory::create(['category_name' => 'Alpha Category']);
+        DowntimeCategory::create(['category_name' => 'SORTIR']);
+        DowntimeCategory::create(['category_name' => 'CLEANING']);
         Personnel::create(['name' => 'Zeta Technician', 'role' => 'Teknisi']);
         Personnel::create(['name' => 'Alpha Technician', 'role' => 'Teknisi']);
 
@@ -156,7 +168,7 @@ class ProductionDashboardTest extends TestCase
         $this->assertSame(['Alpha Area', 'Zeta Area'], $areaOptions->pluck('name')->all());
         $this->assertSame(['Alpha Product', 'Zeta Product'], $alphaArea['products']->pluck('name')->all());
         $this->assertSame(['Alpha Machine', 'Zeta Machine'], $alphaArea['machines']->pluck('name')->all());
-        $this->assertSame(['Alpha Category', 'Zeta Category'], $response->viewData('categories')->pluck('category_name')->all());
+        $this->assertSame(['CLEANING', 'SORTIR'], $response->viewData('categories')->pluck('category_name')->all());
         $this->assertSame(['Alpha Technician', 'Zeta Technician'], $response->viewData('personnels')->pluck('name')->all());
     }
 
@@ -189,7 +201,7 @@ class ProductionDashboardTest extends TestCase
         $area = Area::create(['area_name' => 'Tablet Hormon']);
         $product = Product::create(['area_id' => $area->id, 'product_name' => 'Novasterone']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Stripper Indomach']);
-        $category = DowntimeCategory::create(['category_name' => 'Troubleshooting Kelistrikan']);
+        $category = DowntimeCategory::create(['category_name' => 'PERBAIKAN MESIN']);
         $personnel = Personnel::create(['name' => 'Teknisi Listrik Pabrik', 'role' => 'Teknisi']);
 
         $tokenResponse = $this->actingAs($operator)
@@ -228,7 +240,7 @@ class ProductionDashboardTest extends TestCase
             ->assertSee('Stripper Indomach')
             ->assertSee('Ahmad')
             ->assertSee('BATCH-DASH-002')
-            ->assertSee('Troubleshooting Kelistrikan')
+            ->assertSee('PERBAIKAN MESIN')
             ->assertSee('Teknisi Listrik Pabrik')
             ->assertSee('Selesai Downtime')
             ->assertSee('Mulai Mesin');

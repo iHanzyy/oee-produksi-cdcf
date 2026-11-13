@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Area;
+use App\Models\DowntimeCategory;
 use App\Models\Product;
 use Database\Seeders\ProductionMasterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,6 +19,7 @@ class ProductionMasterSeederTest extends TestCase
         $novasteroneId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Novasteron'])->id;
         $norethisteroneId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Norethisterone Tab 5 mg'])->id;
         $pilKbHarmonisId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Pil KB Harmonies'])->id;
+        DowntimeCategory::create(['category_name' => 'Preventive Maintenance']);
 
         $this->seed(ProductionMasterSeeder::class);
         $this->seed(ProductionMasterSeeder::class);
@@ -25,7 +27,7 @@ class ProductionMasterSeederTest extends TestCase
         $this->assertDatabaseCount('areas', 5);
         $this->assertDatabaseCount('products', 29);
         $this->assertDatabaseCount('machines', 11);
-        $this->assertDatabaseCount('downtime_categories', 5);
+        $this->assertDatabaseCount('downtime_categories', 13);
         $this->assertDatabaseCount('personnels', 3);
 
         $tabletHormonId = (int) $this->getConnection()
@@ -47,5 +49,9 @@ class ProductionMasterSeederTest extends TestCase
         $this->assertDatabaseHas('products', ['area_id' => $tabletHormonId, 'product_name' => 'Trinordiol Fase 3']);
         $this->assertDatabaseHas('machines', ['area_id' => $tabletHormonId, 'machine_name' => 'Cetak Gylongli 1']);
         $this->assertDatabaseHas('machines', ['area_id' => $tabletHormonId, 'machine_name' => 'Coating Yenchen']);
+        $this->assertSame(
+            collect(DowntimeCategory::OPERATOR_OPTIONS)->sort()->values()->all(),
+            DowntimeCategory::query()->orderBy('category_name')->pluck('category_name')->all(),
+        );
     }
 }

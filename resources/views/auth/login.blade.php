@@ -12,9 +12,9 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-oee-ice font-sans text-slate-950 antialiased">
+    <body class="min-h-screen bg-background font-sans text-slate-950 antialiased">
         <main class="grid min-h-[100dvh] lg:grid-cols-2">
-            <section class="flex min-h-[100dvh] flex-col bg-oee-ice px-6 py-5 sm:px-12 sm:py-6 xl:px-24 2xl:px-32" aria-labelledby="login-title">
+            <section class="flex min-h-[100dvh] flex-col bg-background px-6 py-5 sm:px-12 sm:py-6 xl:px-24 2xl:px-32" aria-labelledby="login-title">
                 <header class="mt-auto flex justify-center">
                     <div class="aspect-[3/1] w-full max-w-64 overflow-hidden sm:max-w-80">
                         <img src="{{ asset('brand/logo-oee.png') }}" alt="OEE, Overall Equipment Effectiveness" width="1672" height="941" class="w-full -translate-y-[15%]">
@@ -74,7 +74,7 @@
                             </div>
 
                             <div class="pt-4 sm:pt-6">
-                                <button type="submit" :disabled="submitting" class="flex h-14 w-full cursor-pointer items-center justify-center rounded-lg bg-oee-navy px-5 text-base font-bold text-white transition-colors hover:bg-oee-blue active:bg-oee-navy focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-oee-blue focus-visible:ring-offset-2 focus-visible:ring-offset-oee-ice disabled:cursor-not-allowed disabled:opacity-60 sm:h-16 sm:text-lg">
+                                <button type="submit" :disabled="submitting" class="flex h-14 w-full cursor-pointer items-center justify-center rounded-lg bg-primary px-5 text-base font-bold text-white transition-colors hover:bg-secondary active:bg-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-60 sm:h-16 sm:text-lg">
                                     <span x-show="!submitting">Login</span>
                                     <span x-cloak x-show="submitting" role="status" aria-live="polite">Sedang masuk...</span>
                                 </button>

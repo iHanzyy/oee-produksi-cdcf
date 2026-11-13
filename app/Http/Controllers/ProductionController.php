@@ -26,7 +26,10 @@ class ProductionController extends Controller
             ->where('controller_token_hash', $this->controllerHash($request))
             ->latest()
             ->first();
-        $categories = DowntimeCategory::query()->orderBy('category_name')->get();
+        $categories = DowntimeCategory::query()
+            ->whereIn('category_name', DowntimeCategory::OPERATOR_OPTIONS)
+            ->orderBy('category_name')
+            ->get();
         $personnels = Personnel::query()->orderBy('name')->get();
         $areas = Area::with([
             'activeProducts' => fn ($query) => $query->orderBy('product_name'),

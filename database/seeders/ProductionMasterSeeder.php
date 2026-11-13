@@ -126,7 +126,10 @@ class ProductionMasterSeeder extends Seeder
             }
         }
 
-        foreach (['Breakdown Mesin', 'Setup / Changeover', 'Troubleshooting Kelistrikan', 'Preventive Maintenance', 'Material Delay'] as $categoryName) {
+        DowntimeCategory::where('category_name', 'Preventive Maintenance')
+            ->update(['category_name' => 'PREVENTIVE MAINTENANCE']);
+
+        foreach (DowntimeCategory::OPERATOR_OPTIONS as $categoryName) {
             DowntimeCategory::firstOrCreate(['category_name' => $categoryName]);
         }
 

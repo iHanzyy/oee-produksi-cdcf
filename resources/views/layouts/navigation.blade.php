@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="sticky top-0 z-30 border-b {{ auth()->user()->role === 'operator' ? 'border-oee-blue bg-oee-blue shadow-md' : 'border-slate-200 bg-white/95 backdrop-blur' }}">
+<nav x-data="{ open: false }" class="sticky top-0 z-30 border-b {{ auth()->user()->role === 'operator' ? 'border-secondary bg-secondary shadow-md' : 'border-slate-200 bg-white/95 backdrop-blur' }}">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center gap-4 sm:gap-8">
@@ -28,7 +28,7 @@
                 
                 <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
-                    <button type="submit" class="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-red-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 {{ auth()->user()->role === 'operator' ? 'focus-visible:ring-offset-oee-blue' : '' }}">
+                    <button type="submit" class="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-red-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 {{ auth()->user()->role === 'operator' ? 'focus-visible:ring-offset-secondary' : '' }}">
                         <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 15l4-5-4-5M17 10H7M10 17H5a2 2 0 01-2-2V5a2 2 0 012-2h5" />
                         </svg>

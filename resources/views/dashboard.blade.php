@@ -28,12 +28,12 @@
 
 
         <!-- Pesan Sukses / Stabilisasi Stasiun -->
-        <div x-cloak x-show="successBanner" role="status" class="mb-5 rounded-xl border-l-4 border-emerald-600 bg-emerald-50 p-4 text-sm sm:text-base font-bold text-emerald-900 shadow-sm flex items-center justify-between transition-all">
+        <div x-cloak x-show="successBanner" role="status" class="mb-5 rounded-xl border-l-4 border-oee-blue bg-oee-ice/30 p-4 text-sm sm:text-base font-bold text-oee-navy shadow-sm flex items-center justify-between transition-all">
             <div class="flex items-center gap-2">
-                <span class="text-lg">✓</span>
+                <svg class="h-6 w-6 shrink-0 text-oee-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                 <span x-text="successBanner"></span>
             </div>
-            <button type="button" @click="successBanner = ''" class="text-emerald-700 hover:text-emerald-900 font-bold text-sm px-2 py-1">Tutup</button>
+            <button type="button" @click="successBanner = ''" class="rounded-lg px-2 py-1 text-sm font-bold text-oee-blue hover:bg-oee-ice/50 hover:text-oee-navy">Tutup</button>
         </div>
 
         <!-- 1. STATUS READY (Mulai Produksi Baru) -->
@@ -193,7 +193,7 @@
 
                     <!-- Tombol Start Produksi -->
                     <div class="sm:col-span-2 pt-2">
-                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-oee-blue px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-oee-navy focus:outline-none focus:ring-2 focus:ring-oee-blue focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg">
+                        <button type="submit" :disabled="busy" class="flex min-h-[56px] w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg">
                             <span x-show="!busy">Mulai Produksi</span>
                             <span x-cloak x-show="busy">Menyiapkan sesi...</span>
                         </button>
@@ -218,9 +218,9 @@
             <!-- Kartu Kendali Mesin Aktif -->
             <div class="rounded-2xl border bg-white p-5 shadow-sm sm:p-7 transition-all"
                 :class="{
-                    'border-emerald-300 ring-2 ring-emerald-500/10': state === 'running',
+                    'border-oee-cyan ring-2 ring-oee-cyan/20': state === 'running',
                     'border-red-400 ring-2 ring-red-500/15': state === 'downtime',
-                    'border-slate-300': state === 'completed'
+                    'border-oee-ice': state === 'completed'
                 }"
             >
                 <!-- Bagian Atas: Status & Nama Mesin & Timer -->
@@ -229,31 +229,31 @@
                         <!-- Pill Status Mesin -->
                         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-wider"
                             :class="{
-                                'bg-emerald-100 text-emerald-800 border border-emerald-300': state === 'running',
+                                'bg-oee-ice/40 text-oee-navy border border-oee-cyan': state === 'running',
                                 'bg-red-100 text-red-800 border border-red-300': state === 'downtime',
-                                'bg-slate-100 text-slate-800 border border-slate-300': state === 'completed'
+                                'bg-oee-ice/30 text-oee-navy border border-oee-ice': state === 'completed'
                             }"
                         >
                             <span class="inline-block h-2.5 w-2.5 rounded-full"
                                 :class="{
-                                    'bg-emerald-600 animate-ping': state === 'running',
+                                    'bg-oee-blue animate-ping': state === 'running',
                                     'bg-red-600 animate-pulse': state === 'downtime',
-                                    'bg-slate-500': state === 'completed'
+                                    'bg-oee-navy': state === 'completed'
                                 }"
                             ></span>
                             <span x-text="state === 'downtime' ? 'MESIN BERHENTI (DOWNTIME)' : state === 'completed' ? 'PRODUKSI SELESAI' : 'MESIN BERJALAN'"></span>
                         </div>
 
                         <!-- Nama Mesin Besar -->
-                        <h2 id="session-title" class="mt-2 text-2xl sm:text-4xl font-black text-slate-900 tracking-tight" x-text="session?.machine.name"></h2>
+                        <h2 id="session-title" class="mt-2 text-2xl sm:text-4xl font-black text-oee-navy tracking-tight" x-text="session?.machine.name"></h2>
                     </div>
 
                     <!-- Panel Timer untuk Tablet -->
                     <div class="flex flex-col sm:items-end gap-2">
                         <!-- Tampilan Timer Running -->
-                        <div x-show="state === 'running'" class="rounded-xl border border-emerald-200 bg-emerald-50/70 px-5 py-3 text-center sm:text-right min-w-[200px]">
-                            <p class="text-xs font-bold uppercase tracking-wider text-emerald-800">Durasi Sesi</p>
-                            <p class="mt-0.5 font-mono text-3xl sm:text-4xl font-extrabold text-slate-900 tabular-nums" x-text="elapsed" aria-live="off"></p>
+                        <div x-show="state === 'running'" class="min-w-[200px] rounded-xl border border-oee-cyan bg-oee-ice/20 px-5 py-3 text-center sm:text-right">
+                            <p class="text-xs font-bold uppercase tracking-wider text-oee-blue">Durasi Sesi</p>
+                            <p class="mt-0.5 font-mono text-3xl sm:text-4xl font-extrabold text-oee-navy tabular-nums" x-text="elapsed" aria-live="off"></p>
                         </div>
 
                         <!-- Tampilan Dual Timer Saat Downtime -->
@@ -267,9 +267,9 @@
                                 <p class="mt-0.5 font-mono text-3xl sm:text-4xl font-black text-red-800 tabular-nums animate-pulse" x-text="downtimeElapsed" aria-live="off"></p>
                             </div>
                             <!-- Sekunder Timer: Durasi Sesi -->
-                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center sm:text-right min-w-[150px]">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Durasi Sesi</p>
-                                <p class="mt-0.5 font-mono text-2xl font-bold text-slate-700 tabular-nums" x-text="elapsed" aria-live="off"></p>
+                            <div class="rounded-xl border border-oee-cyan bg-oee-ice/20 px-4 py-3 text-center sm:text-right min-w-[150px]">
+                                <p class="text-xs font-bold uppercase tracking-wider text-oee-blue">Durasi Sesi</p>
+                                <p class="mt-0.5 font-mono text-2xl font-bold text-oee-navy tabular-nums" x-text="elapsed" aria-live="off"></p>
                             </div>
                         </div>
                     </div>
@@ -277,23 +277,23 @@
 
                 <!-- Glanceable Crosscheck Data Grid (Untuk dicek Operator di Tablet) -->
                 <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-200">
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Area</p>
-                        <p class="mt-1 text-base font-bold text-slate-900" x-text="session?.area.name"></p>
+                    <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-3.5">
+                        <p class="text-xs font-bold uppercase tracking-wider text-oee-blue">Area</p>
+                        <p class="mt-1 text-base font-bold text-oee-navy" x-text="session?.area.name"></p>
                     </div>
-                    <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-200">
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Nama Operator</p>
-                        <p class="mt-1 text-base font-bold text-slate-900" x-text="session?.operatorName"></p>
+                    <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-3.5">
+                        <p class="text-xs font-bold uppercase tracking-wider text-oee-blue">Nama Operator</p>
+                        <p class="mt-1 text-base font-bold text-oee-navy" x-text="session?.operatorName"></p>
                     </div>
-                    <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-200">
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Nama Produk</p>
-                        <p class="mt-1 text-base font-bold text-slate-900" x-text="session?.product.name"></p>
-                        <p class="mt-2 text-xs font-bold uppercase tracking-wider text-slate-500">Nomor Batch</p>
-                        <p class="mt-1 text-sm font-bold text-slate-900" x-text="session?.batchNumber || '-'"></p>
+                    <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-3.5">
+                        <p class="text-xs font-bold uppercase tracking-wider text-oee-blue">Nama Produk</p>
+                        <p class="mt-1 text-base font-bold text-oee-navy" x-text="session?.product.name"></p>
+                        <p class="mt-2 text-xs font-bold uppercase tracking-wider text-oee-blue">Nomor Batch</p>
+                        <p class="mt-1 text-sm font-bold text-oee-navy" x-text="session?.batchNumber || '-'"></p>
                     </div>
-                    <div class="rounded-xl bg-slate-50 p-3.5 border border-slate-200">
-                        <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Waktu Mulai</p>
-                        <p class="mt-1 text-base font-bold text-slate-900" x-text="session?.startTime ? new Date(session.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-'"></p>
+                    <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-3.5">
+                        <p class="text-xs font-bold uppercase tracking-wider text-oee-blue">Waktu Mulai</p>
+                        <p class="mt-1 text-base font-bold text-oee-navy" x-text="session?.startTime ? new Date(session.startTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-'"></p>
                     </div>
                 </div>
 
@@ -305,7 +305,7 @@
                         </svg>
                         <span>STOP MESIN</span>
                     </button>
-                    <button type="button" @click="askFinish" :disabled="busy || cooldown" class="min-h-[58px] sm:w-56 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-bold text-white shadow-sm hover:bg-emerald-800 active:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                    <button type="button" @click="askFinish" :disabled="busy || cooldown" class="flex min-h-[58px] items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-56">
                         <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 10.5l4 4L16 6.5" />
                         </svg>
@@ -316,28 +316,54 @@
                 <!-- Tampilan & Form Saat Mesin Downtime -->
                 <div x-show="state === 'downtime'" class="mt-6 space-y-4">
                     <!-- Banner Pengingat Downtime & Tombol Selesai Downtime -->
-                    <div x-show="!showDowntimeForm" class="rounded-xl border-2 border-red-300 bg-red-50 p-5 text-center sm:text-left flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
+                    <div class="flex flex-col gap-4 rounded-xl border border-red-300 bg-red-50 p-5 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+                        <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+                            </span>
+                            <div>
                             <p class="text-base sm:text-lg font-black text-red-900">Mesin Sedang Dalam Perbaikan (Downtime)</p>
                             <p class="mt-1 text-sm text-red-700">Jika perbaikan mesin telah selesai, tekan tombol di samping untuk mengisi data kendala dan menyalakan mesin.</p>
+                            </div>
                         </div>
                         <button
                             x-show="isController"
                             type="button"
-                            @click="openDowntimeForm"
-                            class="min-h-[52px] shrink-0 rounded-xl bg-red-700 px-7 py-3 text-base font-bold text-white shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 transition-all"
+                            @click="openDowntimeForm(); $nextTick(() => $refs.categorySelect.focus())"
+                            class="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3 text-base font-bold text-white shadow-md transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                         >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
                             Selesai Downtime
                         </button>
                     </div>
 
                     <!-- Form Kendala & Perbaikan -->
-                    <div x-show="isController && showDowntimeForm" class="rounded-2xl border-2 border-red-400 bg-white p-5 sm:p-7 shadow-lg">
-                        <div class="border-b border-red-100 pb-4">
-                            <div class="flex items-center gap-2">
-                                <h3 class="text-lg sm:text-xl font-bold text-slate-900">Form Pencatatan Kendala & Perbaikan</h3>
+                    <div x-show="isController && showDowntimeForm" x-cloak @click.self="if (!busy) closeDowntimeForm()" @keydown.escape.window="if (!busy) closeDowntimeForm()" class="fixed inset-0 z-50 flex items-center justify-center bg-oee-navy/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="downtime-form-title">
+                        <div class="max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-2xl border border-oee-cyan bg-white p-5 shadow-2xl sm:p-7">
+                        <div class="border-b border-oee-ice pb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-oee-ice/40 text-oee-blue">
+                                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 9.34l-2.59-2.59-5.83 5.83m2.59 2.59-3.53 3.53a2.121 2.121 0 0 1-3-3l3.94-3.94m2.59 3.41 2.59 2.59m.65-11.01 1.06-1.06a2.121 2.121 0 0 1 3 3l-1.47 1.47" />
+                                    </svg>
+                                </span>
+                                <div>
+                                    <h3 id="downtime-form-title" class="text-lg font-bold text-oee-navy sm:text-xl">Catat Kendala & Perbaikan</h3>
+                                    <p class="mt-0.5 text-sm text-slate-600">Lengkapi data perbaikan sebelum mesin dijalankan kembali.</p>
+                                </div>
                             </div>
-                            <p class="mt-1 text-sm text-slate-600">Lengkapi data berikut sebelum menyalakan mesin kembali.</p>
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-red-700">Mesin</p>
+                                    <p class="text-base font-bold text-oee-navy" x-text="session?.machine.name"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-bold uppercase tracking-wider text-red-700">Lama Berhenti</p>
+                                    <p class="font-mono text-xl font-black text-red-800 tabular-nums" x-text="downtimeElapsed"></p>
+                                </div>
+                            </div>
                         </div>
 
                         <form @submit.prevent="resume" class="mt-5 grid gap-4 sm:grid-cols-2">
@@ -346,7 +372,7 @@
                                 <label for="category_id" class="block text-sm font-bold text-slate-800">
                                     Kategori Kendala <span class="text-red-600">*</span>
                                 </label>
-                                <select id="category_id" x-model="categoryId" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-red-600 focus:ring-red-600">
+                                <select id="category_id" x-ref="categorySelect" x-model="categoryId" required class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base font-medium text-oee-navy focus:border-oee-blue focus:ring-oee-blue">
                                     <option value="">-- Pilih Kategori Kendala --</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->category_name }}</option>
@@ -359,7 +385,7 @@
                                 <label for="personnel_id" class="block text-sm font-bold text-slate-800">
                                     Pelaksana Perbaikan <span class="text-red-600">*</span>
                                 </label>
-                                <select id="personnel_id" x-model="personnelId" required class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base font-medium text-slate-900 focus:border-red-600 focus:ring-red-600">
+                                <select id="personnel_id" x-model="personnelId" required class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base font-medium text-oee-navy focus:border-oee-blue focus:ring-oee-blue">
                                     <option value="">-- Pilih Pelaksana Perbaikan --</option>
                                     @foreach ($personnels as $personnel)
                                         <option value="{{ $personnel->id }}">{{ $personnel->name }}</option>
@@ -372,7 +398,7 @@
                                 <label for="replaced_component" class="block text-sm font-bold text-slate-800">
                                     Komponen Diganti <span class="text-xs font-normal text-slate-500">(Opsional, kosongkan bila tidak ada penggantian)</span>
                                 </label>
-                                <input id="replaced_component" x-model.trim="replacedComponent" type="text" maxlength="255" class="mt-2 block min-h-[50px] w-full rounded-xl border-slate-300 text-base text-slate-900 focus:border-red-600 focus:ring-red-600" placeholder="Contoh: Sensor switch, seal bearing, nozzle, dsb.">
+                                <input id="replaced_component" x-model.trim="replacedComponent" type="text" maxlength="255" class="mt-2 block min-h-[50px] w-full rounded-xl border-oee-cyan/70 text-base text-oee-navy focus:border-oee-blue focus:ring-oee-blue" placeholder="Contoh: sensor switch, seal bearing, atau nozzle">
                             </div>
 
                             <!-- Tindakan Perbaikan -->
@@ -380,7 +406,7 @@
                                 <label for="repair_action" class="block text-sm font-bold text-slate-800">
                                     Tindakan Perbaikan <span class="text-red-600">*</span>
                                 </label>
-                                <textarea id="repair_action" x-model.trim="repairAction" required maxlength="1000" rows="3" class="mt-2 block w-full rounded-xl border-slate-300 text-base text-slate-900 focus:border-red-600 focus:ring-red-600" placeholder="Jelaskan tindakan perbaikan yang telah dilakukan secara singkat dan jelas..."></textarea>
+                                <textarea id="repair_action" x-model.trim="repairAction" required maxlength="1000" rows="3" class="mt-2 block w-full rounded-xl border-oee-cyan/70 text-base text-oee-navy focus:border-oee-blue focus:ring-oee-blue" placeholder="Contoh: membersihkan sensor dan mengencangkan konektor"></textarea>
                             </div>
 
                             <!-- Pesan Error Langsung di Form (Mudah dilihat di tablet tanpa scroll) -->
@@ -390,100 +416,128 @@
 
                             <!-- Tombol Eksekusi Mulai Mesin -->
                             <div class="sm:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
-                                <button type="button" @click="closeDowntimeForm" :disabled="busy" class="min-h-[50px] rounded-xl border border-slate-300 bg-white px-5 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                                    Batal / Tutup
+                                <button type="button" @click="closeDowntimeForm" :disabled="busy" class="flex min-h-[50px] items-center justify-center gap-2 rounded-xl border border-oee-cyan bg-white px-5 py-3 text-base font-semibold text-oee-navy transition-colors hover:bg-oee-ice/30 disabled:cursor-not-allowed">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                                    Batal
                                 </button>
-                                <button type="submit" :disabled="busy" class="min-h-[54px] rounded-xl bg-emerald-700 px-8 py-3.5 text-base sm:text-lg font-bold text-white shadow-md hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2 disabled:opacity-60 transition-all flex items-center justify-center gap-2">
-                                    <span x-show="!busy">Mulai Mesin</span>
+                                <button type="submit" :disabled="busy" class="flex min-h-[54px] items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-base font-bold text-white shadow-md transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-60 sm:text-lg">
+                                    <svg x-show="!busy" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9m6.364-6.364a9 9 0 1 1-12.728 0" />
+                                    </svg>
+                                    <span x-show="!busy">Simpan & Mulai Mesin</span>
                                     <span x-cloak x-show="busy">Menjalankan mesin...</span>
                                 </button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 3. STATUS COMPLETED (Ringkasan Akhir) -->
-                <div x-show="state === 'completed'" role="status" class="mt-6 rounded-2xl border-2 border-emerald-600 bg-emerald-50/80 p-5 sm:p-7 text-emerald-950">
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white font-black text-xl">✓</span>
+                <!-- 3. STATUS COMPLETED (Popup Ringkasan Akhir) -->
+                <div x-show="state === 'completed'" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-oee-navy/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="completed-summary-title">
+                    <div role="status" class="max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-y-auto rounded-2xl border border-oee-cyan bg-white p-5 text-oee-navy shadow-2xl sm:p-7">
+                    <div class="flex items-center gap-3 border-b border-oee-ice pb-4">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-oee-blue text-white">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                        </span>
                         <div>
-                            <h3 class="text-xl sm:text-2xl font-black text-emerald-950">Sesi Produksi Telah Selesai</h3>
-                            <p class="text-xs sm:text-sm text-emerald-800">Berikut rekapitulasi sesi produksi sebelum kembali ke stasiun awal.</p>
+                            <h3 id="completed-summary-title" class="text-xl font-black text-oee-navy sm:text-2xl">Sesi Produksi Telah Selesai</h3>
+                            <p class="text-xs text-slate-600 sm:text-sm">Periksa hasil produksi ini lalu tekan OKE untuk membuka sesi berikutnya.</p>
+                            <div class="mt-2 flex flex-wrap gap-2 text-xs font-bold">
+                                <span class="rounded-full bg-oee-navy px-3 py-1 text-white" x-text="session?.machine.name"></span>
+                                <span class="rounded-full bg-oee-ice/50 px-3 py-1 text-oee-navy" x-text="session?.product.name"></span>
+                                <span x-show="session?.batchNumber" class="rounded-full border border-oee-cyan px-3 py-1 text-oee-blue" x-text="'Batch ' + session?.batchNumber"></span>
+                            </div>
                         </div>
                     </div>
 
                     <dl class="mt-5 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Waktu Selesai</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900" x-text="session?.endTime ? new Date(session.endTime).toLocaleString('id-ID') : '-'"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Waktu Selesai</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy" x-text="session?.endTime ? new Date(session.endTime).toLocaleString('id-ID') : '-'"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Durasi Sesi</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900" x-text="duration(session?.summary.totalDurationSeconds)"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Durasi Sesi</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy" x-text="duration(session?.summary.totalDurationSeconds)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Ada Kendala Downtime</dt>
-                            <dd class="mt-1 text-base font-bold" :class="session?.summary.hadDowntime ? 'text-amber-700' : 'text-emerald-700'" x-text="session?.summary.hadDowntime ? 'Ya' : 'Tidak'"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Ada Kendala Downtime</dt>
+                            <dd class="mt-1 text-base font-bold" :class="session?.summary.hadDowntime ? 'text-amber-700' : 'text-oee-blue'" x-text="session?.summary.hadDowntime ? 'Ya' : 'Tidak'"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Jumlah Downtime</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900" x-text="session?.summary.downtimeCount + ' kali'"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Jumlah Downtime</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy" x-text="session?.summary.downtimeCount + ' kali'"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Total Downtime</dt>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Total Downtime</dt>
                             <dd class="mt-1 text-base font-bold text-red-700" x-text="duration(session?.summary.totalDowntimeSeconds)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Total Output</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatOutput(session?.oee?.totalOutput)"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Total Output</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy tabular-nums" x-text="formatOutput(session?.oee?.totalOutput)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Reject</dt>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Reject</dt>
                             <dd class="mt-1 text-base font-bold text-red-700 tabular-nums" x-text="formatOutput(session?.oee?.rejectOutput)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Good Output</dt>
-                            <dd class="mt-1 text-base font-bold text-emerald-800 tabular-nums" x-text="formatOutput(session?.oee?.goodOutput)"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Good Output</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-blue tabular-nums" x-text="formatOutput(session?.oee?.goodOutput)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Planned Production Time</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900" x-text="duration((session?.oee?.plannedTimeMinutes ?? 0) * 60)"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Planned Production Time</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy" x-text="duration((session?.oee?.plannedTimeMinutes ?? 0) * 60)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Availability</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatPercent(session?.oee?.availabilityPercent)"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Availability</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy tabular-nums" x-text="formatPercent(session?.oee?.availabilityPercent)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Quality</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatPercent(session?.oee?.qualityPercent)"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Quality</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy tabular-nums" x-text="formatPercent(session?.oee?.qualityPercent)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Performance</dt>
-                            <dd class="mt-1 text-base font-bold text-slate-900 tabular-nums" x-text="formatPercent(session?.oee?.performancePercent)"></dd>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Performance</dt>
+                            <dd class="mt-1 text-base font-bold text-oee-navy tabular-nums" x-text="formatPercent(session?.oee?.performancePercent)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">OEE</dt>
-                            <dd class="mt-1 text-lg font-black text-emerald-900 tabular-nums" x-text="formatPercent(session?.oee?.oeePercent)"></dd>
+                        <div class="rounded-xl border border-oee-cyan bg-oee-ice/30 p-4">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">OEE</dt>
+                            <dd class="mt-1 text-lg font-black text-oee-navy tabular-nums" x-text="formatPercent(session?.oee?.oeePercent)"></dd>
                         </div>
-                        <div class="rounded-xl bg-white p-4 shadow-sm border border-emerald-200 sm:col-span-2 lg:col-span-2">
-                            <dt class="text-xs font-bold uppercase text-emerald-800">Peringatan</dt>
+                        <div class="rounded-xl border border-oee-ice bg-oee-ice/15 p-4 sm:col-span-2 lg:col-span-2">
+                            <dt class="text-xs font-bold uppercase text-oee-blue">Peringatan</dt>
                             <dd class="mt-1 text-sm font-bold" :class="session?.oee?.warnings?.length ? 'text-amber-800' : 'text-slate-700'" x-text="session?.oee?.warnings?.length ? session.oee.warnings.join(' ') : '-'"></dd>
                         </div>
                     </dl>
 
-                    <button x-show="isController" type="button" @click="acknowledge" :disabled="busy" class="mt-6 min-h-[56px] w-full rounded-xl bg-emerald-800 px-6 py-3.5 text-lg font-bold text-white shadow-md hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-800 focus:ring-offset-2 disabled:opacity-60 transition-colors">
+                    <button x-show="isController" type="button" @click="acknowledge" :disabled="busy" class="mt-6 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-lg font-bold text-white shadow-md transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-60">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
                         OKE
                     </button>
+                    </div>
                 </div>
             </div>
 
         </section>
 
         <!-- Dialog Konfirmasi In-Page Tablet-Friendly -->
-        <div x-show="confirmAction" x-cloak @keydown.escape.window="cancelConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-oee-navy/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="confirmTitle">
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-oee-ice">
-                <h3 class="text-xl font-bold text-oee-navy" x-text="confirmTitle"></h3>
-                <p class="mt-2 text-base text-slate-600 leading-relaxed" x-text="confirmMessage"></p>
+        <div x-show="confirmAction" x-cloak @click.self="if (!busy) cancelConfirm()" @keydown.escape.window="cancelConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-oee-navy/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" :aria-label="confirmTitle">
+            <div class="max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-oee-ice bg-white p-6 shadow-2xl">
+                <div class="flex items-start gap-3">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" :class="confirmAction === 'stop' ? 'bg-red-700 text-white' : 'bg-oee-ice/50 text-oee-blue'">
+                        <svg x-show="confirmAction === 'stop'" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
+                        <svg x-show="confirmAction === 'finish'" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    </span>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="text-xl font-bold text-oee-navy" x-text="confirmTitle"></h3>
+                        <p class="mt-1 truncate text-sm font-semibold text-oee-blue" x-text="(session?.machine.name || '') + (session?.batchNumber ? ' · Batch ' + session.batchNumber : '')"></p>
+                    </div>
+                </div>
+                <p class="mt-4 text-base text-slate-600 leading-relaxed" x-text="confirmMessage"></p>
                 <div x-show="confirmAction === 'finish'" class="mt-4 space-y-4">
                     <div>
                         <label for="total_output" class="block text-sm font-bold text-slate-800">
@@ -518,16 +572,20 @@
                             placeholder="Masukkan output reject"
                         >
                     </div>
-                    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4" aria-live="polite">
-                        <p class="text-xs font-bold uppercase tracking-wide text-emerald-800">Good Output</p>
-                        <p class="mt-1 text-lg font-black text-emerald-950 tabular-nums" x-text="formatOutput(goodOutput)"></p>
+                    <div class="rounded-xl border border-oee-cyan bg-oee-ice/25 p-4" aria-live="polite">
+                        <p class="text-xs font-bold uppercase tracking-wide text-oee-blue">Good Output</p>
+                        <p class="mt-1 text-lg font-black text-oee-navy tabular-nums" x-text="formatOutput(goodOutput)"></p>
                     </div>
                 </div>
                 <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
-                    <button type="button" @click="cancelConfirm" class="min-h-[48px] rounded-xl border border-slate-300 px-5 py-2.5 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                    <button type="button" @click="cancelConfirm" :disabled="busy" class="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-oee-cyan px-5 py-2.5 text-base font-semibold text-oee-navy transition-colors hover:bg-oee-ice/30 disabled:cursor-not-allowed">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                         Batal
                     </button>
-                    <button type="button" @click="executeConfirm" :disabled="!canConfirm() || busy" class="min-h-[48px] rounded-xl bg-red-700 px-6 py-2.5 text-base font-bold text-white shadow hover:bg-red-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" x-text="confirmButtonText">
+                    <button type="button" @click="executeConfirm" :disabled="!canConfirm() || busy" class="flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-base font-bold text-white shadow transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed" :class="confirmAction === 'stop' ? 'bg-red-700 hover:bg-red-800 focus:ring-red-700' : 'bg-primary hover:bg-secondary focus:ring-primary'">
+                        <svg x-show="confirmAction === 'stop'" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
+                        <svg x-show="confirmAction === 'finish'" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                        <span x-text="confirmButtonText"></span>
                     </button>
                 </div>
             </div>
@@ -544,12 +602,12 @@
                     </span>
                     <div>
                         <h3 class="text-xl font-bold text-oee-navy" x-text="alertTitle || 'Pemberitahuan Sistem'"></h3>
-                        <p class="text-xs text-slate-500 font-medium">Stasiun Kontrol Produksi</p>
                     </div>
                 </div>
                 <p class="mt-4 text-base font-medium text-slate-700 leading-relaxed" x-text="alertDialogMessage"></p>
                 <div class="mt-6 flex justify-end">
-                    <button type="button" @click="alertDialogMessage = ''" class="min-h-[48px] w-full rounded-xl bg-oee-navy px-6 py-2.5 text-base font-bold text-white shadow-md hover:bg-oee-blue active:scale-[0.98] transition-all">
+                    <button type="button" @click="alertDialogMessage = ''" class="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-base font-bold text-white shadow-md hover:bg-secondary active:scale-[0.98] transition-all">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
                         Mengerti
                     </button>
                 </div>
