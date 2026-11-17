@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
 
         $route = match ($request->user()->role) {
             'operator' => 'dashboard',
-            'spv', 'manager' => 'history.index',
+            'spv', 'manager', 'amd' => 'history.index',
             default => null,
         };
 

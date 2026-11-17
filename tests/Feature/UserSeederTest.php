@@ -23,7 +23,7 @@ class UserSeederTest extends TestCase
             'operator' => ['operator', 'operator', 'Operator Produksi'],
             'supervisor' => ['supervisor', 'spv', 'Supervisor Produksi'],
             'manager' => ['manager', 'manager', 'Manager Produksi'],
-            'AMD' => ['AMD', 'manager', 'Associate Managing Director'],
+            'AMD' => ['AMD', 'amd', 'Associate Managing Director'],
         ] as $username => [$password, $role, $name]) {
             $user = User::query()->where('email', $username)->firstOrFail();
 

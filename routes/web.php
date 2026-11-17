@@ -21,7 +21,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/production-sessions/{productionSession}/acknowledge', [ProductionController::class, 'acknowledge'])->name('production.acknowledge');
     });
 
-    Route::middleware('role:spv,manager')->group(function () {
+    Route::middleware('role:spv,manager,amd')->group(function () {
         Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
         Route::get('/oee', [HistoryController::class, 'oee'])->name('oee.index');
         Route::get('/history/active-sessions', [HistoryController::class, 'activeSessions'])->name('history.active_sessions');

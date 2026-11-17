@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
                 'name' => 'Associate Managing Director',
                 'email' => 'AMD',
                 'password' => Hash::make('AMD'),
-                'role' => 'manager',
+                'role' => 'amd',
             ],
         ];
 

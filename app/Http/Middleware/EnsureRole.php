@@ -14,7 +14,7 @@ class EnsureRole
             if ($request->isMethod('GET') && ! $request->expectsJson()) {
                 $route = match ($request->user()?->role) {
                     'operator' => 'dashboard',
-                    'spv', 'manager' => 'history.index',
+                    'spv', 'manager', 'amd' => 'history.index',
                     default => null,
                 };
 

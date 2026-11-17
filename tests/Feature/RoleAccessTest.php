@@ -22,7 +22,7 @@ class RoleAccessTest extends TestCase
 
     public function test_wrong_role_pages_redirect_to_the_allowed_home(): void
     {
-        foreach (['spv', 'manager'] as $role) {
+        foreach (['spv', 'manager', 'amd'] as $role) {
             $user = User::factory()->create(['role' => $role]);
 
             $this->actingAs($user)->get(route('history.index'))->assertOk();
@@ -42,6 +42,7 @@ class RoleAccessTest extends TestCase
             'operator' => route('dashboard', absolute: false),
             'spv' => route('history.index', absolute: false),
             'manager' => route('history.index', absolute: false),
+            'amd' => route('history.index', absolute: false),
         ] as $role => $destination) {
             $user = User::factory()->create([
                 'email' => $role.'@example.com',

@@ -22,7 +22,7 @@ class HistoryReportingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_reporting_routes_are_readable_by_spv_and_manager_but_forbidden_to_operator(): void
+    public function test_reporting_routes_are_readable_by_reporting_roles_but_forbidden_to_operator(): void
     {
         $area = Area::create(['area_name' => 'Tablet Hormon']);
         $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Mixing']);
@@ -35,7 +35,7 @@ class HistoryReportingTest extends TestCase
             'status' => 'completed',
         ]);
 
-        foreach (['spv', 'manager'] as $role) {
+        foreach (['spv', 'manager', 'amd'] as $role) {
             $user = User::factory()->create(['role' => $role]);
 
             $this->actingAs($user)->get(route('history.index'))->assertOk();

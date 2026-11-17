@@ -15,7 +15,7 @@ class OeeAnalyticsTest extends TestCase
 
     public function test_reporting_roles_can_open_oee_analytics_but_operator_cannot(): void
     {
-        foreach (['spv', 'manager'] as $role) {
+        foreach (['spv', 'manager', 'amd'] as $role) {
             $user = User::factory()->create(['role' => $role]);
 
             $this->actingAs($user)
