@@ -349,7 +349,8 @@ class HistoryReportingTest extends TestCase
         $response->assertViewMissing('logs');
 
         $response
-            ->assertSee('Riwayat Produksi/OEE')
+            ->assertSee('Riwayat Produksi')
+            ->assertDontSee('Riwayat Produksi/OEE')
             ->assertDontSee('Riwayat Kendala & Downtime')
             ->assertSee('BATCH-OEE-NODT')
             ->assertSee('BATCH-OEE-WARN')
@@ -365,7 +366,10 @@ class HistoryReportingTest extends TestCase
             ->assertSee('Durasi: 420 menit')
             ->assertSee('Quality melebihi 100%. Performance melebihi 100%. OEE melebihi 100%.')
             ->assertSee('Data OEE sesi ini belum lengkap.')
-            ->assertSee('Lihat detail')
+            ->assertSee('Pilih Lihat Detail untuk melihat hasil produksi, komponen OEE, dan kendala sesi.')
+            ->assertSee('Kendala Produksi')
+            ->assertSee('2 kendala · 60 menit')
+            ->assertSee('Lihat Detail')
             ->assertSee(route('history.show', $multiDowntime), false)
             ->assertDontSee('id="session-detail-'.$multiDowntime->id.'"', false);
 
@@ -438,6 +442,20 @@ class HistoryReportingTest extends TestCase
             ]))
             ->assertOk()
             ->assertSee('Belum ada sesi produksi selesai pada filter ini.');
+    }
+
+    public function test_history_uses_one_detail_action_and_solid_secondary_buttons(): void
+    {
+        $view = file_get_contents(resource_path('views/history.blade.php'));
+        $button = file_get_contents(resource_path('views/components/action-button.blade.php'));
+
+        $this->assertStringNotContainsString('window.location.href', $view);
+        $this->assertStringNotContainsString('cursor-pointer', $view);
+        $this->assertStringContainsString('whitespace-nowrap', $view);
+        $this->assertStringContainsString(
+            "'secondary' => 'bg-secondary text-white hover:bg-primary focus-visible:ring-secondary'",
+            $button,
+        );
     }
 
     private function createDowntime(

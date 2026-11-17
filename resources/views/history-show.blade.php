@@ -58,7 +58,7 @@
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-                <p class="text-sm font-semibold text-brand-700">Detail Sesi Produksi</p>
+                <p class="text-sm font-semibold text-secondary">Detail Sesi Produksi</p>
                 <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
                     {{ $session->machine?->machine_name ?? '-' }}
                 </h1>
@@ -67,15 +67,12 @@
                 </p>
             </div>
 
-            <a
-                href="{{ $backUrl }}"
-                class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
-            >
+            <x-action-button href="{{ $backUrl }}" variant="secondary" class="min-h-[44px] px-4 py-2.5 text-sm">
                 <svg class="h-4 w-4 shrink-0 text-slate-600" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 14.5L8 10l4.5-4.5" />
                 </svg>
                 <span>Kembali ke Riwayat</span>
-            </a>
+            </x-action-button>
         </header>
 
         @if(count($warnings))
@@ -89,28 +86,28 @@
         @endif
 
         <div class="mb-6 grid gap-6 lg:grid-cols-3">
-            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="detail-oee-title">
+            <section class="rounded-2xl border border-accent/70 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="detail-oee-title">
                 <h2 id="detail-oee-title" class="text-sm font-bold uppercase tracking-wider text-slate-600">Komponen OEE</h2>
                 <dl class="mt-4 grid grid-cols-2 gap-3 text-xs tabular-nums">
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                    <div class="rounded-xl border border-accent/60 bg-background/20 p-3.5">
                         <dt class="font-semibold text-slate-500">Availability</dt>
                         <dd class="mt-1 text-lg font-bold text-slate-900">
                             {{ $session->availability_percent !== null ? number_format((float) $session->availability_percent, 2, ',', '.') . '%' : '-' }}
                         </dd>
                     </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                    <div class="rounded-xl border border-accent/60 bg-background/20 p-3.5">
                         <dt class="font-semibold text-slate-500">Quality</dt>
                         <dd class="mt-1 text-lg font-bold text-slate-900">
                             {{ $session->quality_percent !== null ? number_format((float) $session->quality_percent, 2, ',', '.') . '%' : '-' }}
                         </dd>
                     </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                    <div class="rounded-xl border border-accent/60 bg-background/20 p-3.5">
                         <dt class="font-semibold text-slate-500">Performance</dt>
                         <dd class="mt-1 text-lg font-bold text-slate-900">
                             {{ $session->performance_percent !== null ? number_format((float) $session->performance_percent, 2, ',', '.') . '%' : '-' }}
                         </dd>
                     </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                    <div class="rounded-xl border border-accent/60 bg-background/20 p-3.5">
                         <dt class="font-semibold text-slate-500">Total OEE</dt>
                         <dd class="mt-1 text-lg font-bold {{ count($warnings) ? 'text-amber-700' : 'text-emerald-700' }}">
                             {{ $session->oee_percent !== null ? number_format((float) $session->oee_percent, 2, ',', '.') . '%' : '-' }}
@@ -119,7 +116,7 @@
                 </dl>
             </section>
 
-            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="detail-output-title">
+            <section class="rounded-2xl border border-accent/70 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="detail-output-title">
                 <h2 id="detail-output-title" class="text-sm font-bold uppercase tracking-wider text-slate-600">Output &amp; Standar Produksi</h2>
                 <dl class="mt-4 grid grid-cols-2 gap-4 text-xs tabular-nums">
                     <div>
@@ -163,7 +160,7 @@
                 </dl>
             </section>
 
-            <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="detail-time-title">
+            <section class="rounded-2xl border border-accent/70 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="detail-time-title">
                 <h2 id="detail-time-title" class="text-sm font-bold uppercase tracking-wider text-slate-600">Waktu &amp; Durasi Sesi</h2>
                 <dl class="mt-4 grid grid-cols-2 gap-4 text-xs tabular-nums">
                     <div>
@@ -190,7 +187,7 @@
             </section>
         </div>
 
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="detail-downtime-title">
+        <section class="overflow-hidden rounded-2xl border border-accent/70 bg-white shadow-sm" aria-labelledby="detail-downtime-title">
             <div class="flex flex-col gap-1 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <h2 id="detail-downtime-title" class="text-base font-bold text-slate-950">Rincian Kendala &amp; Downtime Sesi</h2>
                 <span class="self-start rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 tabular-nums sm:self-auto">

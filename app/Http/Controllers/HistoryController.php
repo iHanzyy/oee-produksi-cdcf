@@ -19,11 +19,7 @@ class HistoryController extends Controller
     {
         $filters = $request->filters();
         $completedSessions = ProductionSession::query()->forHistory($filters)->paginate(15, ['*'], 'session_page')->withQueryString();
-        $areas = Area::query()->orderBy('area_name')->get();
-        $machines = Machine::query()
-            ->when(isset($filters['area_id']), fn ($query) => $query->where('area_id', $filters['area_id']))
-            ->orderBy('machine_name')
-            ->get();
+        [$areas, $machines] = $this->filterOptions($filters);
 
         $activeSessions = ProductionSession::with(['machine.area', 'product', 'downtimeLogs'])
             ->active()
@@ -34,6 +30,33 @@ class HistoryController extends Controller
         $serverNow = now('Asia/Jakarta')->toIso8601String();
 
         return view('history', compact('completedSessions', 'areas', 'machines', 'activeSessions', 'serverNow'));
+    }
+
+    public function oee(HistoryFilterRequest $request)
+    {
+        $filters = $request->filters();
+        $aggregate = ProductionSession::query()
+            ->filteredCompleted($filters)
+            ->whereNotNull('oee_percent')
+            ->selectRaw('COUNT(*) as session_count')
+            ->selectRaw('AVG(oee_percent) as average_oee')
+            ->selectRaw('AVG(availability_percent) as average_availability')
+            ->selectRaw('AVG(quality_percent) as average_quality')
+            ->selectRaw('AVG(performance_percent) as average_performance')
+            ->first();
+
+        $averageOee = $aggregate->average_oee === null ? null : round((float) $aggregate->average_oee, 4);
+        $oeeSummary = [
+            'sessionCount' => (int) $aggregate->session_count,
+            'averageOee' => $averageOee,
+            'averageAvailability' => $aggregate->average_availability === null ? null : round((float) $aggregate->average_availability, 4),
+            'averageQuality' => $aggregate->average_quality === null ? null : round((float) $aggregate->average_quality, 4),
+            'averagePerformance' => $aggregate->average_performance === null ? null : round((float) $aggregate->average_performance, 4),
+            'gaugeOee' => max(0, min(100, $averageOee ?? 0)),
+        ];
+        [$areas, $machines] = $this->filterOptions($filters);
+
+        return view('oee', compact('oeeSummary', 'areas', 'machines'));
     }
 
     public function show(Request $request, ProductionSession $productionSession)
@@ -98,5 +121,16 @@ class HistoryController extends Controller
     public function exportExcel(HistoryFilterRequest $request): BinaryFileResponse
     {
         return Excel::download(new DowntimeHistoryExport($request->filters()), 'Laporan_Downtime_OEE.xlsx');
+    }
+
+    private function filterOptions(array $filters): array
+    {
+        return [
+            Area::query()->orderBy('area_name')->get(),
+            Machine::query()
+                ->when(isset($filters['area_id']), fn ($query) => $query->where('area_id', $filters['area_id']))
+                ->orderBy('machine_name')
+                ->get(),
+        ];
     }
 }

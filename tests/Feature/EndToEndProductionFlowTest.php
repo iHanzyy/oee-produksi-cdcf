@@ -90,7 +90,7 @@ class EndToEndProductionFlowTest extends TestCase
         $this->actingAs($spv)
             ->get(route('history.index', ['area_id' => $area->id, 'machine_id' => $machine->id]))
             ->assertOk()
-            ->assertSee('Riwayat Produksi/OEE')
+            ->assertSee('Riwayat Produksi')
             ->assertSee('35 kg')
             ->assertSee('Mixing')
             ->assertSee('BATCH-E2E-001')

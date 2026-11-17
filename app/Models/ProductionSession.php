@@ -43,9 +43,17 @@ class ProductionSession extends Model
     public function scopeForHistory(Builder $query, array $filters): Builder
     {
         return $query
+            ->filteredCompleted($filters)
             ->with(['machine.area', 'product'])
             ->withCount('downtimeLogs')
             ->withSum('downtimeLogs', 'duration_seconds')
+            ->orderByDesc('end_time')
+            ->orderByDesc('id');
+    }
+
+    public function scopeFilteredCompleted(Builder $query, array $filters): Builder
+    {
+        return $query
             ->where('status', 'completed')
             ->when(isset($filters['start_date']), function (Builder $query) use ($filters): void {
                 $start = CarbonImmutable::createFromFormat('Y-m-d', $filters['start_date'], 'Asia/Jakarta')
@@ -61,9 +69,7 @@ class ProductionSession extends Model
                 'machine',
                 fn (Builder $query) => $query->where('area_id', $filters['area_id']),
             ))
-            ->when(isset($filters['machine_id']), fn (Builder $query) => $query->where('machine_id', $filters['machine_id']))
-            ->orderByDesc('end_time')
-            ->orderByDesc('id');
+            ->when(isset($filters['machine_id']), fn (Builder $query) => $query->where('machine_id', $filters['machine_id']));
     }
 
     public function oeeWarnings(): array

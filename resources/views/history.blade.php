@@ -9,28 +9,25 @@
     >
         <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <p class="text-sm font-semibold text-brand-700">Panel Supervisor &amp; Manager</p>
+                <p class="text-sm font-semibold text-secondary">Panel Supervisor, Manager &amp; AMD</p>
                 <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Pemantauan &amp; Riwayat Produksi</h1>
             </div>
 
-            <a
-                href="{{ route('history.export', request()->query()) }}"
-                class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
-            >
+            <x-action-button href="{{ route('history.export', request()->query()) }}" class="min-h-[44px] px-4 py-2.5 text-sm">
                 <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0l-3.5-3.5M10 12l3.5-3.5M4 14v2a1 1 0 001 1h10a1 1 0 001-1v-2" />
                 </svg>
                 <span>Unduh Excel</span>
-            </a>
+            </x-action-button>
         </header>
 
         <!-- Live Plant Monitoring Section -->
-        <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="live-monitoring-title">
+        <section class="mb-6 rounded-2xl border border-accent/70 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="live-monitoring-title">
             <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-2.5">
                     <h2 id="live-monitoring-title" class="text-lg font-bold tracking-tight text-slate-950 sm:text-xl">Monitoring Mesin Aktif (Live)</h2>
-                    <span class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-xs font-bold text-brand-700">
-                        <span class="h-2 w-2 rounded-full bg-brand-400"></span>
+                    <span class="inline-flex items-center gap-1.5 rounded-full border border-accent bg-background/30 px-2.5 py-0.5 text-xs font-bold text-secondary">
+                        <span class="h-2 w-2 rounded-full bg-secondary"></span>
                         Live
                     </span>
                 </div>
@@ -70,7 +67,7 @@
                                 <span class="h-2 w-2 rounded-full" :class="item.status === 'running' ? 'bg-emerald-600' : 'bg-red-600 animate-pulse'"></span>
                                 <span x-text="item.status === 'running' ? 'BERJALAN' : 'DOWNTIME'"></span>
                             </span>
-                            <span class="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-brand-700" x-text="item.area"></span>
+                            <span class="rounded-md bg-background/30 px-2 py-0.5 text-xs font-semibold text-secondary" x-text="item.area"></span>
                         </div>
 
                         <h3 class="mt-3 text-lg font-bold tracking-tight text-slate-950" x-text="item.machine"></h3>
@@ -104,67 +101,25 @@
             </div>
         </section>
 
-        <!-- Panel Filter Pencarian -->
-        <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-label="Filter Riwayat">
-            @if($errors->any())
-                <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700" role="alert">
-                    {{ $errors->first() }}
-                </div>
-            @endif
+        <x-report-filters
+            :action="route('history.index')"
+            :reset-url="route('history.index')"
+            :areas="$areas"
+            :machines="$machines"
+            label="Filter Riwayat Produksi"
+            submit-label="Cari"
+            loading-text="Memuat riwayat..."
+            class="mb-6"
+        />
 
-            <form action="{{ route('history.index') }}" method="GET" x-data="{ loading: false }" @submit="loading = true" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
-                <div>
-                    <label for="start_date" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Dari Tanggal</label>
-                    <input id="start_date" type="date" name="start_date" value="{{ request('start_date') }}" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
-                </div>
-                <div>
-                    <label for="end_date" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Sampai Tanggal</label>
-                    <input id="end_date" type="date" name="end_date" value="{{ request('end_date') }}" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
-                </div>
-                <div>
-                    <label for="area_id" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Area Produksi</label>
-                    <select id="area_id" name="area_id" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
-                        <option value="">-- Semua Area --</option>
-                        @foreach($areas as $area)
-                            <option value="{{ $area->id }}" {{ request('area_id') == $area->id ? 'selected' : '' }}>{{ $area->area_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="machine_id" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Pilih Mesin</label>
-                    <select id="machine_id" name="machine_id" class="mt-1.5 block min-h-[44px] w-full rounded-xl border-slate-300 text-sm font-medium text-slate-900 focus:border-brand-700 focus:ring-brand-700">
-                        <option value="">-- Semua Mesin --</option>
-                        @foreach($machines as $machine)
-                            <option value="{{ $machine->id }}" {{ request('machine_id') == $machine->id ? 'selected' : '' }}>{{ $machine->machine_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex gap-2 sm:col-span-2 lg:col-span-1">
-                    <button type="submit" :disabled="loading" class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
-                        <svg x-show="!loading" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17l-3.8-3.8m1.3-4.2a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z" />
-                        </svg>
-                        <span x-show="!loading">Cari</span>
-                        <span x-cloak x-show="loading" role="status" aria-live="polite">Memuat riwayat...</span>
-                    </button>
-                    <a href="{{ route('history.index') }}" class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2">
-                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 10a6 6 0 101.76-4.24L4 7.5M4 4v3.5h3.5" />
-                        </svg>
-                        <span>Reset</span>
-                    </a>
-                </div>
-            </form>
-        </section>
-
-        <!-- Panel Tabel Riwayat Produksi/OEE -->
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="oee-history-title">
+        <!-- Panel Tabel Riwayat Produksi -->
+        <section class="overflow-hidden rounded-2xl border border-accent/70 bg-white shadow-sm" aria-labelledby="oee-history-title">
             <div class="flex flex-col gap-1 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
-                    <h2 id="oee-history-title" class="text-base font-bold text-slate-950">Riwayat Produksi/OEE</h2>
-                    <p class="mt-0.5 text-xs font-medium text-slate-500">Klik baris sesi atau tombol <span class="font-semibold text-slate-700">Lihat detail</span> untuk membuka halaman rincian produksi, komponen OEE, dan kendala sesi.</p>
+                    <h2 id="oee-history-title" class="text-base font-bold text-slate-950">Riwayat Produksi</h2>
+                    <p class="mt-0.5 text-xs font-medium text-slate-500">Pilih Lihat Detail untuk melihat hasil produksi, komponen OEE, dan kendala sesi.</p>
                 </div>
-                <span class="self-start rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-bold text-brand-700 tabular-nums sm:self-auto">{{ $completedSessions->total() }} Sesi</span>
+                <span class="self-start rounded-lg bg-background/30 px-2.5 py-1 text-xs font-bold text-secondary tabular-nums sm:self-auto">{{ $completedSessions->total() }} Sesi</span>
             </div>
 
             <div class="overflow-x-auto">
@@ -175,7 +130,7 @@
                             <th class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-500 sm:px-6">Identitas Sesi</th>
                             <th class="px-5 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-500 sm:px-6">Output Produksi</th>
                             <th class="px-5 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-500 sm:px-6">OEE</th>
-                            <th class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-500 sm:px-6">Kendala &amp; Catatan</th>
+                            <th class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-slate-500 sm:px-6">Kendala Produksi</th>
                             <th class="px-5 py-3.5 text-right text-xs font-bold uppercase tracking-wider text-slate-500 sm:px-6">Detail</th>
                         </tr>
                     </thead>
@@ -227,10 +182,7 @@
                                     : '-';
                                 $detailUrl = route('history.show', array_merge(['productionSession' => $session->id], $filterQuery));
                             @endphp
-                            <tr
-                                @click="if (!$event.target.closest('a')) window.location.href = @js($detailUrl)"
-                                class="cursor-pointer transition-colors hover:bg-slate-50/80"
-                            >
+                            <tr class="transition-colors hover:bg-slate-50/80">
                                 <td class="whitespace-nowrap px-5 py-4 align-top sm:px-6 tabular-nums">
                                     <div class="text-sm font-bold text-slate-900">{{ $session->end_time?->timezone('Asia/Jakarta')->format('d M Y') ?? '-' }}</div>
                                     <div class="mt-0.5 text-xs font-medium text-slate-500">{{ $session->end_time?->timezone('Asia/Jakarta')->format('H:i:s') ?? '-' }} WIB</div>
@@ -239,7 +191,7 @@
                                 <td class="px-5 py-4 align-top sm:px-6">
                                     <div class="text-sm font-bold text-slate-900">{{ $session->machine?->machine_name ?? '-' }}</div>
                                     <div class="mt-0.5 text-xs font-medium text-slate-500">{{ $session->machine?->area?->area_name ?? '-' }} · {{ $session->product?->product_name ?? '-' }}</div>
-                                    <div class="mt-1 text-xs font-semibold text-brand-700">Nomor Batch: {{ $session->batch_number ?? '-' }} · Operator: {{ $session->operator_name ?? '-' }}</div>
+                                    <div class="mt-1 text-xs font-semibold text-secondary">Nomor Batch: {{ $session->batch_number ?? '-' }} · Operator: {{ $session->operator_name ?? '-' }}</div>
                                 </td>
                                 <td class="whitespace-nowrap px-5 py-4 text-right align-top sm:px-6 tabular-nums">
                                     <div class="text-sm font-bold text-slate-900">{{ $totalOutputText }}</div>
@@ -269,11 +221,11 @@
                                 <td class="px-5 py-4 align-top text-xs sm:px-6">
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         @if($downtimeCount > 0)
-                                            <span class="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-2 py-0.5 font-bold text-red-700 tabular-nums">
+                                            <span class="inline-flex whitespace-nowrap items-center rounded-md border border-red-200 bg-red-50 px-2 py-0.5 font-bold text-red-700 tabular-nums">
                                                 {{ $downtimeCount }} kendala · {{ $totalDowntimeMinutesText }}
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
+                                            <span class="inline-flex whitespace-nowrap items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
                                                 Tanpa kendala
                                             </span>
                                         @endif
@@ -285,15 +237,12 @@
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-5 py-4 text-right align-top sm:px-6">
-                                    <a
-                                        href="{{ $detailUrl }}"
-                                        class="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2"
-                                    >
-                                        <span>Lihat detail</span>
-                                        <svg class="h-4 w-4 shrink-0 text-slate-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <x-action-button href="{{ $detailUrl }}" variant="secondary" class="min-h-[44px] px-3.5 py-2 text-xs">
+                                        <span>Lihat Detail</span>
+                                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 5.5L12 10l-4.5 4.5" />
                                         </svg>
-                                    </a>
+                                    </x-action-button>
                                 </td>
                             </tr>
                         @empty

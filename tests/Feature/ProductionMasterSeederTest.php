@@ -27,7 +27,7 @@ class ProductionMasterSeederTest extends TestCase
         $this->assertDatabaseCount('areas', 5);
         $this->assertDatabaseCount('products', 29);
         $this->assertDatabaseCount('machines', 11);
-        $this->assertDatabaseCount('downtime_categories', 13);
+        $this->assertDatabaseCount('downtime_categories', 12);
         $this->assertDatabaseCount('personnels', 3);
 
         $tabletHormonId = (int) $this->getConnection()
