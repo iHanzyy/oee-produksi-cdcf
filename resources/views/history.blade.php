@@ -191,7 +191,8 @@
                                 <td class="px-5 py-4 align-top sm:px-6">
                                     <div class="text-sm font-bold text-slate-900">{{ $session->machine?->machine_name ?? '-' }}</div>
                                     <div class="mt-0.5 text-xs font-medium text-slate-500">{{ $session->machine?->area?->area_name ?? '-' }} · {{ $session->product?->product_name ?? '-' }}</div>
-                                    <div class="mt-1 text-xs font-semibold text-secondary">Nomor Batch: {{ $session->batch_number ?? '-' }} · Operator: {{ $session->operator_name ?? '-' }}</div>
+                                    <div class="mt-1 text-xs font-semibold text-secondary">Nomor Batch: {{ $session->batch_number ?? '-' }}</div>
+                                    <div class="mt-0.5 text-xs font-semibold text-secondary">Operator: {{ $session->operator_name ?? '-' }}</div>
                                 </td>
                                 <td class="whitespace-nowrap px-5 py-4 text-right align-top sm:px-6 tabular-nums">
                                     <div class="text-sm font-bold text-slate-900">{{ $totalOutputText }}</div>

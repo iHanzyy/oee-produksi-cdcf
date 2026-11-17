@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ProductionMasterSeeder::class,
             UserSeeder::class,
+            PresentationHistorySeeder::class,
         ]);
     }
 }
