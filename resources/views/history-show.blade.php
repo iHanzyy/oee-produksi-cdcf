@@ -68,7 +68,7 @@
             </div>
 
             <x-action-button href="{{ $backUrl }}" variant="secondary" class="min-h-[44px] px-4 py-2.5 text-sm">
-                <svg class="h-4 w-4 shrink-0 text-slate-600" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 14.5L8 10l4.5-4.5" />
                 </svg>
                 <span>Kembali ke Riwayat</span>
