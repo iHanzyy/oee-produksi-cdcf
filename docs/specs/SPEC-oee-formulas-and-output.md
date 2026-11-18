@@ -28,7 +28,7 @@ Keberhasilan berarti hasil OEE tidak lagi memakai satu rumus berbasis kilogram u
 ## Project Structure
 
 - `database/migrations/` menambah kolom standar generik dan snapshot output tanpa menghapus kolom legacy.
-- `database/seeders/ProductionMasterSeeder.php` menyimpan standar dari empat gambar secara idempotent.
+- `database/seeders/ProductionMasterSeeder.php` menyimpan standar dari workbook SPV secara idempotent.
 - `app/Models/OeeStandard.php` dan `app/Models/ProductionSession.php` menangani cast serta snapshot data baru.
 - `app/Http/Requests/CompleteProductionSessionRequest.php` memvalidasi Total Output dan Reject pada trust boundary.
 - `app/Http/Controllers/ProductionController.php` memilih rumus berdasarkan jenis proses dan menyimpan snapshot dalam transaksi penyelesaian sesi.
@@ -60,7 +60,7 @@ Setiap pasangan produk-mesin aktif memiliki:
 - `output_unit`: `tablet`, `strip`, `blister`, atau `kg`;
 - `planned_time_minutes` lebih dari 0;
 - `theoretical_output` lebih dari 0 untuk referensi dan snapshot;
-- `ideal_cycle_time_minutes_per_unit` lebih dari 0 untuk `unit_cycle`, dan kosong untuk `yield_ratio`.
+- `ideal_cycle_time_minutes_per_unit` menyimpan menit per tablet/strip/blister untuk `unit_cycle` dan menit per kg untuk `yield_ratio`; rumus Performance `yield_ratio` tidak memakai nilai ini.
 
 Saat sesi dimulai, planned production time diambil dari standar produk-mesin. Saat sesi diselesaikan, standar aktif disalin sebagai snapshot agar perubahan master berikutnya tidak mengubah hasil sesi lama.
 
@@ -103,13 +103,13 @@ Process Time dan Realtime Process memakai akumulasi waktu mesin running yang sam
 
 - Semua produk memakai `0.0125` menit/strip.
 - Alyrenol, Pregnolin, Progeston, Prestrenol: output teoritis 20,000 strip; planned time 960 menit.
-- Bifertil, Provula, Novasterone, Norelut, Meprolut, Luteron, Norethisterone, Etiro-N, Andalut: output teoritis 14,000 strip; planned time 480 menit.
+- Bifertil, Provula, Novasterone, Norelute, Meprolute, Luterone, Norethisterone, Etiro-N, Andalut: output teoritis 14,000 strip; planned time 480 menit.
 
 ### Cetak — `Cetak Gylongli 1` dan `Cetak Gylongli 2`
 
 - Semua produk memakai `0.0004525` menit/tablet.
 - Alyrenol, Pregnolin, Progeston, Prestrenol: output teoritis 200,000 tablet; planned time 480 menit.
-- Bifertil, Provula, Novasterone, Norelut, Meprolut, Luteron, Norethisterone, Etiro-N, Andalut: output teoritis 140,000 tablet; planned time 480 menit.
+- Bifertil, Provula, Novasterone, Norelute, Meprolute, Luterone, Norethisterone, Etiro-N, Andalut: output teoritis 140,000 tablet; planned time 480 menit.
 - Trinordiol Fase 1: 636,000 tablet; planned time 660 menit.
 - Trinordiol Fase 2: 530,000 tablet; planned time 660 menit.
 - Trinordiol Fase 3: 1,060,000 tablet; planned time 660 menit.
@@ -122,20 +122,26 @@ Process Time dan Realtime Process memakai akumulasi waktu mesin running yang sam
 
 ### Granulasi — `Mixing`
 
-- Alyrenol, Pregnolin, Progeston, Prestrenol: output teoritis 40 kg; planned time 480 menit.
-- Bifertil, Provula: output teoritis 25.55 kg; planned time 480 menit.
-- Novasterone, Norelut, Meprolut, Luteron, Norethisterone, Etiro-N, Andalut: output teoritis 25.235 kg; planned time 480 menit.
-- Trinordiol Fase 1: 34.980 kg; planned time 660 menit.
-- Trinordiol Fase 2: 29.150 kg; planned time 660 menit.
-- Trinordiol Fase 3: 58.300 kg; planned time 660 menit.
-- Pil KB Harmonis: 90 kg; planned time 660 menit.
+- Alyrenol, Pregnolin, Progeston, Prestrenol: 40 kg; `4.5` menit/kg; planned time 480 menit.
+- Bifertil, Provula: 25.55 kg; `14.09` menit/kg; planned time 480 menit.
+- Novasterone, Norelute, Meprolute, Luterone, Norethisterone, Etiro-N, Andalut: 25.235 kg; `4.76` menit/kg; planned time 480 menit.
+- Trinordiol Fase 1: 34.980 kg; `17.15` menit/kg; planned time 660 menit.
+- Trinordiol Fase 2: 29.150 kg; `20.58` menit/kg; planned time 660 menit.
+- Trinordiol Fase 3: 58.300 kg; `10.29` menit/kg; planned time 660 menit.
+- Pil KB Harmonis: 90 kg; `6.6667` menit/kg; planned time 660 menit.
 
 ### Coating — `Coating Yenchen`
 
-- Pil KB Harmonis: output teoritis 90 kg; planned time 660 menit.
-- Trinordiol Fase 1: 34.980 kg; planned time 1,320 menit.
-- Trinordiol Fase 2: 29.150 kg; planned time 1,140 menit.
-- Trinordiol Fase 3: 58.300 kg; planned time 1,800 menit.
+- Pil KB Harmonis: 90 kg; `7.333` menit/kg; planned time 660 menit.
+- Trinordiol Fase 1: 34.980 kg; `37.7358` menit/kg; planned time 1,320 menit.
+- Trinordiol Fase 2: 29.150 kg; `39.1081` menit/kg; planned time 1,140 menit.
+- Trinordiol Fase 3: 58.300 kg; `30.8748` menit/kg; planned time 1,800 menit.
+
+### History Demo
+
+- Satu sesi demo dibuat untuk setiap pasangan standar produk-mesin aktif.
+- Realtime Proses memakai kolom Durasi Proses Aktual workbook; downtime demo selalu 30 menit dan hanya memperpanjang rentang sesi.
+- Availability demo tetap `Realtime Proses / Planned Production Time * 100%`; downtime tidak masuk pembilang.
 
 ## User Interface
 

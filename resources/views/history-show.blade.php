@@ -7,8 +7,11 @@
             || $session->performance_percent !== null;
         $hasGenericOutput = $session->total_output !== null;
         $outputUnit = $hasGenericOutput ? ($session->output_unit ?? 'unit') : 'kg';
+        $outputDecimals = $outputUnit === 'kg' ? 3 : 0;
         $formatOutput = fn ($value) => $value !== null
-            ? rtrim(rtrim(number_format((float) $value, 3, ',', '.'), '0'), ',') . ' ' . $outputUnit
+            ? ($outputDecimals === 0
+                ? number_format((float) $value, 0, ',', '.')
+                : rtrim(rtrim(number_format((float) $value, 3, ',', '.'), '0'), ',')) . ' ' . $outputUnit
             : '-';
         $totalOutputValue = $hasGenericOutput ? $session->total_output : $session->actual_output_kg;
         $rejectOutputValue = $hasGenericOutput ? $session->reject_output : null;

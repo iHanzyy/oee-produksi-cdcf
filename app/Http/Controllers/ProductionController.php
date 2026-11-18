@@ -325,6 +325,12 @@ class ProductionController extends Controller
             // ponytail: inline OEE math because completion is the only calculation point; extract only if reused.
             $totalOutput = (float) $validated['total_output'];
             $rejectOutput = (float) $validated['reject_output'];
+            abort_if(
+                $standard->process_type === 'unit_cycle'
+                    && (floor($totalOutput) !== $totalOutput || floor($rejectOutput) !== $rejectOutput),
+                422,
+                'Output tablet, strip, dan blister harus berupa bilangan bulat.',
+            );
             $goodOutput = $totalOutput - $rejectOutput;
             $realtimeProcessMinutes = $realtimeProcessSeconds / 60;
             $availabilityPercent = $realtimeProcessSeconds / $plannedTimeSeconds * 100;

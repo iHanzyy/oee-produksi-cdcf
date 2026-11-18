@@ -253,6 +253,21 @@ class OeeCalculationTest extends TestCase
         $this->assertSame(5400, $session->fresh()->operating_time_seconds);
     }
 
+    public function test_unit_cycle_completion_rejects_fractional_output(): void
+    {
+        Carbon::setTestNow('2026-11-09 08:00:00');
+        [$operator, $session, , $token] = $this->startProductionSession();
+        Carbon::setTestNow('2026-11-09 16:00:00');
+
+        $this->postAsBrowser($operator, $token, route('machine.end', $session), [
+            'confirmed' => true,
+            'total_output' => 180480.5,
+            'reject_output' => 1082.88,
+        ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Output tablet, strip, dan blister harus berupa bilangan bulat.');
+    }
+
     private function startProductionSession(array $standardOverrides = []): array
     {
         $operator = User::factory()->create(['role' => 'operator']);

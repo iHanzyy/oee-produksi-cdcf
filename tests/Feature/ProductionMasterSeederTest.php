@@ -17,6 +17,9 @@ class ProductionMasterSeederTest extends TestCase
     {
         $tabletHormon = Area::create(['area_name' => 'Tablet Hormon']);
         $novasteroneId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Novasteron'])->id;
+        $noreluteId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Norelut'])->id;
+        $meproluteId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Meprolut'])->id;
+        $luteroneId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Luteron'])->id;
         $norethisteroneId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Norethisterone Tab 5 mg'])->id;
         $pilKbHarmonisId = Product::create(['area_id' => $tabletHormon->id, 'product_name' => 'Pil KB Harmonies'])->id;
         DowntimeCategory::create(['category_name' => 'Preventive Maintenance']);
@@ -38,9 +41,15 @@ class ProductionMasterSeederTest extends TestCase
         $this->assertSame(25, $this->getConnection()->table('products')->where('area_id', $tabletHormonId)->count());
         $this->assertSame(7, $this->getConnection()->table('machines')->where('area_id', $tabletHormonId)->where('is_active', true)->count());
         $this->assertDatabaseHas('products', ['id' => $novasteroneId, 'area_id' => $tabletHormonId, 'product_name' => 'Novasterone']);
+        $this->assertDatabaseHas('products', ['id' => $noreluteId, 'area_id' => $tabletHormonId, 'product_name' => 'Norelute']);
+        $this->assertDatabaseHas('products', ['id' => $meproluteId, 'area_id' => $tabletHormonId, 'product_name' => 'Meprolute']);
+        $this->assertDatabaseHas('products', ['id' => $luteroneId, 'area_id' => $tabletHormonId, 'product_name' => 'Luterone']);
         $this->assertDatabaseHas('products', ['id' => $norethisteroneId, 'area_id' => $tabletHormonId, 'product_name' => 'Norethisterone']);
         $this->assertDatabaseHas('products', ['id' => $pilKbHarmonisId, 'area_id' => $tabletHormonId, 'product_name' => 'Pil KB Harmonis']);
         $this->assertDatabaseMissing('products', ['product_name' => 'Novasteron']);
+        $this->assertDatabaseMissing('products', ['product_name' => 'Norelut']);
+        $this->assertDatabaseMissing('products', ['product_name' => 'Meprolut']);
+        $this->assertDatabaseMissing('products', ['product_name' => 'Luteron']);
         $this->assertDatabaseMissing('products', ['product_name' => 'Norethisterone Tab 5 mg']);
         $this->assertDatabaseMissing('products', ['product_name' => 'Pil KB Harmonies']);
         $this->assertDatabaseHas('products', ['area_id' => $tabletHormonId, 'product_name' => 'Dienogest']);

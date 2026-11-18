@@ -98,7 +98,13 @@ class OeeStandardTest extends TestCase
         $this->assertSame('kg', $find('Alyrenol', 'Mixing')?->output_unit);
         $this->assertSame(480, $find('Alyrenol', 'Mixing')?->planned_time_minutes);
         $this->assertSame('40.000', $find('Alyrenol', 'Mixing')?->theoretical_output);
-        $this->assertNull($find('Alyrenol', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('4.5000000000', $find('Alyrenol', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('14.0900000000', $find('Bifertil', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('4.7600000000', $find('Norelute', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('17.1500000000', $find('Trinordiol Fase 1', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('20.5800000000', $find('Trinordiol Fase 2', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('10.2900000000', $find('Trinordiol Fase 3', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('6.6667000000', $find('Pil KB Harmonis', 'Mixing')?->ideal_cycle_time_minutes_per_unit);
         $this->assertSame('unit_cycle', $find('Alyrenol', 'Stripper Indomach')?->process_type);
         $this->assertSame('strip', $find('Alyrenol', 'Stripper Indomach')?->output_unit);
         $this->assertSame(960, $find('Alyrenol', 'Stripper Indomach')?->planned_time_minutes);
@@ -109,6 +115,10 @@ class OeeStandardTest extends TestCase
         $this->assertSame(1140, $find('Pil KB Harmonis', 'Cetak Gylongli 2')?->planned_time_minutes);
         $this->assertSame('0.0111000000', $find('Pil KB Harmonis', 'Blister DKPS 1')?->ideal_cycle_time_minutes_per_unit);
         $this->assertSame(3300, $find('Trinordiol', 'Blister DKPS 2')?->planned_time_minutes);
+        $this->assertSame('7.3330000000', $find('Pil KB Harmonis', 'Coating Yenchen')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('37.7358000000', $find('Trinordiol Fase 1', 'Coating Yenchen')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('39.1081000000', $find('Trinordiol Fase 2', 'Coating Yenchen')?->ideal_cycle_time_minutes_per_unit);
+        $this->assertSame('30.8748000000', $find('Trinordiol Fase 3', 'Coating Yenchen')?->ideal_cycle_time_minutes_per_unit);
         $this->assertSame(1800, $find('Trinordiol Fase 3', 'Coating Yenchen')?->planned_time_minutes);
         $this->assertTrue($standards->every(fn (OeeStandard $standard): bool => $standard->is_active));
     }

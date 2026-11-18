@@ -521,7 +521,7 @@ Alpine.data('productionControl', (config) => ({
 
     formatOutput(value) {
         if (value === null || value === undefined || value === '') return '-';
-        return `${Number(value).toLocaleString('id-ID', { maximumFractionDigits: 3 })} ${this.outputUnitLabel}`;
+        return `${Number(value).toLocaleString('id-ID', { maximumFractionDigits: this.outputUnitLabel === 'kg' ? 3 : 0 })} ${this.outputUnitLabel}`;
     },
 
     formatPercent(value) {

@@ -458,6 +458,41 @@ class HistoryReportingTest extends TestCase
         );
     }
 
+    public function test_discrete_outputs_are_rendered_as_whole_units(): void
+    {
+        $spv = User::factory()->create(['role' => 'spv']);
+        $area = Area::create(['area_name' => 'Tablet Hormon']);
+        $product = Product::create(['area_id' => $area->id, 'product_name' => 'Alyrenol']);
+        $machine = Machine::create(['area_id' => $area->id, 'machine_name' => 'Cetak Gylongli 1']);
+        $session = ProductionSession::create([
+            'machine_id' => $machine->id,
+            'product_id' => $product->id,
+            'operator_name' => 'Budi',
+            'batch_number' => 'BATCH-TABLET',
+            'start_time' => '2026-11-16 01:00:00',
+            'end_time' => '2026-11-16 09:00:00',
+            'status' => 'completed',
+            'process_type' => 'unit_cycle',
+            'output_unit' => 'tablet',
+            'total_output' => 180480,
+            'reject_output' => 1082.88,
+            'theoretical_output' => 200000,
+        ]);
+
+        $this->actingAs($spv)
+            ->get(route('history.show', $session))
+            ->assertOk()
+            ->assertSee('180.480 tablet')
+            ->assertSee('1.083 tablet')
+            ->assertSee('179.397 tablet')
+            ->assertDontSee('1.082,88 tablet');
+
+        $this->assertStringContainsString(
+            "maximumFractionDigits: this.outputUnitLabel === 'kg' ? 3 : 0",
+            file_get_contents(resource_path('js/app.js')),
+        );
+    }
+
     private function createDowntime(
         Machine $machine,
         string $stopTime,
