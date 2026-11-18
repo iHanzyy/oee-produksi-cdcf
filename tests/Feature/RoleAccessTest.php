@@ -87,7 +87,7 @@ class RoleAccessTest extends TestCase
             'email' => $user->email,
             'password' => 'password',
         ])->assertSessionHasErrors([
-            'email' => 'Akun ini belum punya akses. Hubungi supervisor.',
+            'email' => 'Akun ini belum memiliki akses. Hubungi penyelia.',
         ]);
 
         $this->assertGuest();

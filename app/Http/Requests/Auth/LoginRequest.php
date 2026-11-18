@@ -36,8 +36,8 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'Username wajib diisi.',
-            'password.required' => 'Password wajib diisi.',
+            'email.required' => 'Nama pengguna wajib diisi.',
+            'password.required' => 'Kata sandi wajib diisi.',
         ];
     }
 
@@ -52,7 +52,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => 'Username atau password salah.',
+                'email' => 'Nama pengguna atau kata sandi salah.',
             ]);
         }
 

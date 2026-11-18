@@ -20,9 +20,9 @@ class AuthenticationTest extends TestCase
             ->assertSee('brand/login-machine.jpg')
             ->assertDontSee('>LOGO<', false)
             ->assertSee('Selamat datang di OEE')
-            ->assertSee('Username')
-            ->assertSee('Password')
-            ->assertSee('Created by GJT')
+            ->assertSee('Nama pengguna')
+            ->assertSee('Kata sandi')
+            ->assertSee('Dibuat oleh GJT')
             ->assertDontSee('Forgot your password?')
             ->assertDontSee('Remember me');
     }
@@ -48,7 +48,7 @@ class AuthenticationTest extends TestCase
             'email' => $user->email,
             'password' => 'wrong-password',
         ])->assertSessionHasErrors([
-            'email' => 'Username atau password salah.',
+            'email' => 'Nama pengguna atau kata sandi salah.',
         ]);
 
         $this->assertGuest();

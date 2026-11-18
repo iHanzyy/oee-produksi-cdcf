@@ -36,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($e instanceof AuthenticationException) {
                 return response()->json([
-                    'message' => 'Sesi login sudah berakhir. Silakan masuk kembali.',
+                    'message' => 'Sesi masuk sudah berakhir. Silakan masuk kembali.',
                 ], 401);
             }
 

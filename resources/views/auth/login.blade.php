@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Login | OEE Produksi</title>
+        <title>Masuk | OEE Produksi</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700&display=swap" rel="stylesheet" />
@@ -24,7 +24,7 @@
                 <div class="pt-4 sm:pt-6">
                     <div class="mx-auto w-full max-w-2xl">
                         <div class="mb-8">
-                            <h1 id="login-title" class="text-4xl font-bold tracking-tight">Login</h1>
+                            <h1 id="login-title" class="text-4xl font-bold tracking-tight">Masuk</h1>
                             <p class="mt-1 text-xl font-medium sm:text-2xl">Selamat datang di OEE</p>
                         </div>
 
@@ -38,7 +38,7 @@
                             @csrf
 
                             <div>
-                                <label for="username" class="block text-lg font-bold sm:text-xl">Username</label>
+                                <label for="username" class="block text-lg font-bold sm:text-xl">Nama pengguna</label>
                                 <input
                                     id="username"
                                     type="text"
@@ -49,7 +49,7 @@
                                     autocomplete="username"
                                     @error('email') aria-invalid="true" aria-describedby="username-error" @enderror
                                     class="mt-2 block h-14 w-full rounded-lg border-oee-blue bg-white/95 px-5 text-base text-slate-950 shadow-none transition-colors placeholder:text-slate-500 hover:border-oee-navy focus:border-oee-navy focus:ring-oee-navy sm:h-16 sm:text-lg"
-                                    placeholder="Masukkan Username"
+                                    placeholder="Masukkan nama pengguna"
                                 >
                                 @error('email')
                                     <p id="username-error" class="mt-2 text-sm font-semibold text-red-800" role="alert">{{ $message }}</p>
@@ -57,7 +57,7 @@
                             </div>
 
                             <div>
-                                <label for="password" class="block text-lg font-bold sm:text-xl">Password</label>
+                                <label for="password" class="block text-lg font-bold sm:text-xl">Kata sandi</label>
                                 <input
                                     id="password"
                                     type="password"
@@ -66,7 +66,7 @@
                                     autocomplete="current-password"
                                     @error('password') aria-invalid="true" aria-describedby="password-error" @enderror
                                     class="mt-2 block h-14 w-full rounded-lg border-oee-blue bg-white/95 px-5 text-base text-slate-950 shadow-none transition-colors placeholder:text-slate-500 hover:border-oee-navy focus:border-oee-navy focus:ring-oee-navy sm:h-16 sm:text-lg"
-                                    placeholder="Masukkan Password"
+                                    placeholder="Masukkan kata sandi"
                                 >
                                 @error('password')
                                     <p id="password-error" class="mt-2 text-sm font-semibold text-red-800" role="alert">{{ $message }}</p>
@@ -75,7 +75,7 @@
 
                             <div class="pt-4 sm:pt-6">
                                 <button type="submit" :disabled="submitting" class="flex h-14 w-full cursor-pointer items-center justify-center rounded-lg bg-primary px-5 text-base font-bold text-white transition-colors hover:bg-secondary active:bg-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-60 sm:h-16 sm:text-lg">
-                                    <span x-show="!submitting">Login</span>
+                                    <span x-show="!submitting">Masuk</span>
                                     <span x-cloak x-show="submitting" role="status" aria-live="polite">Sedang masuk...</span>
                                 </button>
                             </div>
@@ -84,7 +84,7 @@
                 </div>
 
                 <footer class="mt-auto pt-4 text-center text-sm font-medium sm:text-base">
-                    Copyright &copy; 2026 | Created by GJT
+                    Hak cipta &copy; 2026 | Dibuat oleh GJT
                 </footer>
             </section>
 

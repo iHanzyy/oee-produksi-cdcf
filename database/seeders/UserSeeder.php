@@ -5,11 +5,16 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use LogicException;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            throw new LogicException('Seeder akun bawaan tidak boleh dijalankan di lingkungan produksi.');
+        }
+
         $accounts = [
             [
                 'name' => 'Operator Produksi',

@@ -41,7 +41,7 @@ class AuthenticatedSessionController extends Controller
             $request->session()->regenerateToken();
 
             throw ValidationException::withMessages([
-                'email' => 'Akun ini belum punya akses. Hubungi supervisor.',
+                'email' => 'Akun ini belum memiliki akses. Hubungi penyelia.',
             ]);
         }
 

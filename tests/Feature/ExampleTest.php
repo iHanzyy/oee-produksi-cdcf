@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\AddSecurityHeaders;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -12,7 +15,21 @@ class ExampleTest extends TestCase
             ->assertRedirect('/login')
             ->assertHeader('X-Frame-Options', 'DENY')
             ->assertHeader('X-Content-Type-Options', 'nosniff')
-            ->assertHeader('Referrer-Policy', 'same-origin');
+            ->assertHeader('Referrer-Policy', 'same-origin')
+            ->assertHeader('Permissions-Policy', 'camera=(), geolocation=(), microphone=()');
+    }
+
+    public function test_production_https_responses_include_csp_and_hsts(): void
+    {
+        $this->app['env'] = 'production';
+
+        $response = (new AddSecurityHeaders)->handle(
+            Request::create('https://oee.example.test'),
+            fn () => new Response,
+        );
+
+        $this->assertNotNull($response->headers->get('Content-Security-Policy'));
+        $this->assertSame('max-age=31536000', $response->headers->get('Strict-Transport-Security'));
     }
 
     public function test_json_errors_do_not_expose_internal_details(): void
@@ -29,7 +46,7 @@ class ExampleTest extends TestCase
         $this->getJson('/production-sessions/status')
             ->assertUnauthorized()
             ->assertExactJson([
-                'message' => 'Sesi login sudah berakhir. Silakan masuk kembali.',
+                'message' => 'Sesi masuk sudah berakhir. Silakan masuk kembali.',
             ]);
     }
 }

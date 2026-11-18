@@ -30,7 +30,7 @@ return new class extends Migration
         Schema::create('personnels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('role'); 
+            $table->string('role');
             $table->timestamps();
         });
 
@@ -56,8 +56,8 @@ return new class extends Migration
             // Dibuat nullable agar bisa kosong saat tombol STOP ditekan
             $table->foreignId('downtime_category_id')->nullable()->constrained();
             $table->foreignId('personnel_id')->nullable()->constrained('personnels');
-            $table->string('replaced_component')->nullable(); 
-            $table->string('repair_action')->nullable(); 
+            $table->string('replaced_component')->nullable();
+            $table->string('repair_action')->nullable();
             $table->timestamps();
         });
     }

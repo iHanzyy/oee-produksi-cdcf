@@ -9,11 +9,16 @@ use App\Models\Personnel;
 use App\Models\ProductionSession;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 class PresentationHistorySeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            throw new LogicException('Seeder data presentasi tidak boleh dijalankan di lingkungan produksi.');
+        }
+
         $batchPrefixes = [
             'Tablet Hormon' => 'TH',
             'Tablet Non Hormon' => 'TNH',
